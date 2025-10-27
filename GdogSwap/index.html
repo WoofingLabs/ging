@@ -117,6 +117,7 @@
                     </div>
                     <div class="mt-4">
                         <img src="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png" alt="GDOG" class="w-16 h-16 mx-auto animate-float">
+                        <p id="dogMessage" class="text-light-gray text-sm mt-2">汪！连接钱包以部署迷因币！</p>
                     </div>
                 </div>
             </div>
@@ -184,7 +185,11 @@
             userDenied: ["汪！交易被取消，再试一次！", "嗷！你取消了交易，重新来！", "汪汪！交易被拒绝，试试看！"],
             copySuccess: ["汪！地址已复制到剪贴板！", "嗷！复制成功，随时粘贴！", "汪汪！地址复制完成！"],
             copyFail: ["汪！复制地址失败，再试一次！", "嗷！复制出错，检查浏览器！", "汪汪！无法复制，稍后再试！"],
-            liquidityExists: ["汪！此代币已添加流动性！", "嗷！流动池已存在，换个代币！", "汪汪！已添加流动性，检查一下！"]
+            liquidityExists: ["汪！此代币已添加流动性！", "嗷！流动池已存在，换个代币！", "汪汪！已添加流动性，检查一下！"],
+            insufficientBalance: ["汪！WGDOG余额不足！", "嗷！检查你的WGDOG余额！", "汪汪！余额不够，获取更多WGDOG！"],
+            approveStart: ["汪！正在授权WGDOG，稍等！", "嗷！授权进行中，马上好！", "汪汪！授权WGDOG中，稳住！"],
+            approveSuccess: ["汪！WGDOG授权成功！", "嗷！授权完成，准备部署！", "汪汪！授权成功，继续！"],
+            approveFail: ["汪！授权失败，再试一次！", "嗷！授权出错，检查一下！", "汪汪！授权失败，稍后再试！"]
         };
 
         function getRandomMessage(type) {
@@ -205,7 +210,16 @@
                     setTimeout(() => document.body.removeChild(notification), 300);
                 }, 2000);
             } catch (error) {
-                document.getElementById('networkStatus').innerText = getRandomMessage('copyFail');
+                document.getElementById('dogMessage').innerText = getRandomMessage('copyFail');
+            }
+        }
+
+        async function copyToClipboard(address) {
+            try {
+                await navigator.clipboard.writeText(address);
+                document.getElementById('dogMessage').innerText = getRandomMessage('copySuccess');
+            } catch (error) {
+                document.getElementById('dogMessage').innerText = getRandomMessage('copyFail');
             }
         }
 
@@ -221,7 +235,6 @@
                     await updateBalances();
                     await updateRecentMemeCoins();
                     document.getElementById('networkStatus').innerText = '已连接到Gate Layer (ID: 10088)';
-                    document.getElementById('deployMemeCoinButton').disabled = false;
                     document.getElementById('dogMessage').innerText = getRandomMessage('connectSuccess');
                 } catch (error) {
                     document.getElementById('networkStatus').innerText = '钱包连接失败: ' + (error.message || '未知错误');
@@ -264,17 +277,27 @@
         }
 
         async function updateBalances() {
-            if (!web3 || !account) return;
+            if (!web3 || !account) {
+                document.getElementById('balanceStatus').innerText = 'WGDOG余额: 0';
+                document.getElementById('deployMemeCoinButton').disabled = true;
+                return;
+            }
             try {
                 const WGDOGBalance = await WGDOGContract.methods.balanceOf(account).call();
-                document.getElementById('balanceStatus').innerText = `WGDOG余额: ${Number(web3.utils.fromWei(WGDOGBalance, 'ether')).toLocaleString()}`;
+                const balanceFormatted = Number(web3.utils.fromWei(WGDOGBalance, 'ether')).toLocaleString();
+                document.getElementById('balanceStatus').innerText = `WGDOG余额: ${balanceFormatted}`;
+                document.getElementById('deployMemeCoinButton').disabled = Number(WGDOGBalance) < Number(DEPLOY_FEE);
             } catch (error) {
                 document.getElementById('balanceStatus').innerText = 'WGDOG余额: 错误';
+                document.getElementById('deployMemeCoinButton').disabled = true;
             }
         }
 
         async function updateRecentMemeCoins() {
-            if (!web3 || !account) return;
+            if (!web3 || !account) {
+                document.getElementById('recentMemeCoins').innerHTML = '<p class="text-light-gray text-sm">尚未部署迷因币</p>';
+                return;
+            }
             try {
                 const memeCoins = await GdogSwapContract.methods.getRecentMemeCoins(account).call();
                 const container = document.getElementById('recentMemeCoins');
@@ -285,21 +308,13 @@
                     memeCoins.forEach(coin => {
                         const liquidityStatus = coin.pair === '0x0000000000000000000000000000000000000000' ? '无流动性' : '已添加流动性';
                         const p = document.createElement('p');
+                        p.className = 'text-light-gray text-sm';
                         p.innerHTML = `${coin.name} (${coin.symbol}): <span class="cursor-pointer text-accent hover:text-secondary transition-colors" onclick="copyToClipboard('${coin.memeCoin}')">${coin.memeCoin}</span> - ${liquidityStatus}`;
                         container.appendChild(p);
                     });
                 }
             } catch (error) {
                 document.getElementById('recentMemeCoins').innerHTML = '<p class="text-light-gray text-sm">获取迷因币失败</p>';
-            }
-        }
-
-        async function copyToClipboard(address) {
-            try {
-                await navigator.clipboard.writeText(address);
-                document.getElementById('dogMessage').innerText = getRandomMessage('copySuccess');
-            } catch (error) {
-                document.getElementById('dogMessage').innerText = getRandomMessage('copyFail');
             }
         }
 
@@ -321,18 +336,24 @@
 
         async function approveWGDOG() {
             const status = document.getElementById('networkStatus');
+            const dogMessage = document.getElementById('dogMessage');
             try {
                 status.innerText = '正在授权WGDOG...';
+                dogMessage.innerText = getRandomMessage('approveStart');
+                const gasPrice = await web3.eth.getGasPrice();
+                const estimatedGas = await WGDOGContract.methods.approve(GdogSwapAddress, DEPLOY_FEE).estimateGas({ from: account });
                 const txApprove = await WGDOGContract.methods.approve(GdogSwapAddress, DEPLOY_FEE).send({
                     from: account,
-                    gas: web3.utils.toHex(100000)
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 100000))
                 });
                 await waitForTransaction(txApprove.transactionHash);
                 hasApprovedWGDOG = true;
                 status.innerText = 'WGDOG授权成功！';
+                dogMessage.innerText = getRandomMessage('approveSuccess');
                 return true;
             } catch (error) {
                 status.innerText = error.code === 4001 ? '用户取消授权' : `授权失败: ${error.message}`;
+                dogMessage.innerText = getRandomMessage('approveFail');
                 return false;
             }
         }
@@ -365,7 +386,7 @@
                 const WGDOGBalance = await WGDOGContract.methods.balanceOf(account).call();
                 if (web3.utils.toBN(WGDOGBalance).lt(web3.utils.toBN(DEPLOY_FEE))) {
                     status.innerText = 'WGDOG余额不足以支付部署费用';
-                    dogMessage.innerText = '汪！WGDOG不足10个！';
+                    dogMessage.innerText = getRandomMessage('insufficientBalance');
                     return;
                 }
 
@@ -375,9 +396,11 @@
                     if (!approved) return;
                 }
 
+                const gasPrice = await web3.eth.getGasPrice();
+                const estimatedGas = await GdogSwapContract.methods.deployMemeCoin(name, symbol).estimateGas({ from: account });
                 const tx = await GdogSwapContract.methods.deployMemeCoin(name, symbol).send({
                     from: account,
-                    gas: web3.utils.toHex(3000000)
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 3000000))
                 });
                 await waitForTransaction(tx.transactionHash);
 
@@ -415,6 +438,13 @@
             }
 
             try {
+                const isMemeCoin = await GdogSwapContract.methods.isMemeCoin(memeCoinAddress).call();
+                if (!isMemeCoin) {
+                    status.innerText = '无效的迷因币地址';
+                    dogMessage.innerText = getRandomMessage('invalidInput');
+                    return;
+                }
+
                 const hasLiquidity = await GdogSwapContract.methods.hasLiquidityAdded(memeCoinAddress).call();
                 if (hasLiquidity) {
                     liquidityButton.disabled = true;
@@ -456,9 +486,11 @@
                 status.innerText = '正在添加流动性...';
                 dogMessage.innerText = getRandomMessage('liquidityStart');
 
+                const gasPrice = await web3.eth.getGasPrice();
+                const estimatedGas = await GdogSwapContract.methods.addLiquidity(memeCoinAddress).estimateGas({ from: account });
                 const tx = await GdogSwapContract.methods.addLiquidity(memeCoinAddress).send({
                     from: account,
-                    gas: web3.utils.toHex(5000000)
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 5000000))
                 });
                 await waitForTransaction(tx.transactionHash);
 

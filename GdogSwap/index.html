@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GDOG Swap</title>
+    <link rel="icon" type="image/png" href="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0068FF',
+                        secondary: '#18E5A0',
+                        accent: '#FFD700',
+                        dark: '#070808',
+                        'light-gray': '#E5E7EB'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Changa One', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow-glow {
+                text-shadow: 0 0 10px rgba(0, 104, 255, 0.5);
+            }
+            .glow-border {
+                box-shadow: 0 0 12px rgba(24, 229, 160, 0.3);
+            }
+            .bg-grid {
+                background-image: url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Ccircle cx="1" cy="1" r="1" fill="%230068FF" fill-opacity="0.1"/%3E%3C/svg%3E');
+                background-size: 20px 20px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Changa+One&display=swap" rel="stylesheet">
+</head>
+<body class="bg-dark text-white font-sans overflow-x-hidden">
+    <header class="fixed w-full z-50 bg-dark/90 backdrop-blur-md transition-all duration-300" id="navbar">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer hover:text-primary transition-colors">
+                <div class="w-10 h-10 rounded-full overflow-hidden">
+                    <img src="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png" alt="GDOG Logo" class="w-full h-full object-cover">
+                </div>
+                <span class="font-display text-3xl text-primary text-shadow-glow">GDOG Swap</span>
+            </div>
+            <button id="menuToggle" class="md:hidden text-2xl text-primary">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        <div id="mobileMenu" class="md:hidden bg-dark/95 absolute w-full top-full py-4 px-4 hidden">
+            <div class="flex flex-col space-y-4">
+                <a href="#swap" class="hover:text-primary transition-colors py-2 text-white">Swap</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="swap" class="min-h-screen pt-24 pb-16 bg-grid relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-primary/10 to-dark pointer-events-none"></div>
+        <div class="absolute top-0 left-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <div class="w-48 h-48 mx-auto mb-8 animate-float">
+                <img src="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png" alt="GDOG Logo" class="w-full h-full object-cover rounded-full border-4 border-secondary/50 glow-border">
+            </div>
+            <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">GDOG Swap</h1>
+            <p class="text-xl md:text-2xl text-light-gray max-w-3xl mx-auto mb-10">
+                部署你的迷因币，添加流动性，参与GDOG社区！
+            </p>
+            <div class="bg-dark/50 p-6 rounded-lg border border-primary/30 max-w-lg mx-auto mb-8">
+                <div class="flex flex-col space-y-4">
+                    <button id="connectWalletButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">连接钱包</button>
+                    <p id="networkStatus" class="text-light-gray text-sm">点击连接钱包...</p>
+                    <div class="flex items-center bg-dark/80 p-3 rounded-lg border border-primary/20">
+                        <i class="fa fa-link text-accent mr-3"></i>
+                        <span class="font-mono text-sm text-white truncate">0xF671a831cE5C4253Da21c2dA9dAD1280138f</span>
+                        <button class="ml-3 text-light-gray hover:text-secondary transition-colors" onclick="copyContract()">
+                            <i class="fa fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="bg-dark/80 p-3 rounded-lg border border-primary/20">
+                        <p id="balanceStatus" class="text-light-gray text-sm">WGDOG余额: 0</p>
+                    </div>
+                    <div>
+                        <label class="block text-left text-light-gray mb-2">部署迷因币</label>
+                        <input type="text" id="memeCoinName" placeholder="代币名称 (如 DogeCoin)" class="flex-1 px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary mb-2">
+                        <input type="text" id="memeCoinSymbol" placeholder="代币符号 (如 DOGE)" class="flex-1 px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary mb-2">
+                        <button id="deployMemeCoinButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>部署迷因币</button>
+                    </div>
+                    <div>
+                        <label class="block text-left text-light-gray mb-2">添加流动性</label>
+                        <input type="text" id="memeCoinAddress" placeholder="迷因币地址" class="flex-1 px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary mb-2">
+                        <p class="text-light-gray text-sm mb-2">提示: 5,000,000 WGDOG, 1,000,000,000 MEME COIN</p>
+                        <button id="addLiquidityButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>添加流动性</button>
+                    </div>
+                    <div>
+                        <h2 class="text-xl text-primary mb-4">最近的迷因币（最多20个）</h2>
+                        <div id="recentMemeCoins" class="bg-dark/80 p-3 rounded-lg border border-primary/20 text-left">
+                            <p class="text-light-gray text-sm">尚未部署迷因币</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <img src="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png" alt="GDOG" class="w-16 h-16 mx-auto animate-float">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark/95 py-12 border-t border-primary/20">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-light-gray text-sm">© 2025 GDOG. 版权所有。请谨慎投资，DYOR。</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script>
+        const GdogSwapAddress = '0xF671a831cE5C4253Da21c2dA9dAD1280138f';
+        const WGDOGAddress = '0x41260498c4798be317BAAD4403f6eC6c80411349';
+        const DEPLOY_FEE = '10000000000000000000';
+        const WGDOG_AMOUNT = '5000000000000000000000000';
+        const MEME_COIN_AMOUNT = '1000000000000000000000000000';
+
+        const GdogSwapAbi = [
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"memeCoin","type":"address"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":false,"internalType":"string","name":"symbol","type":"string"}],"name":"MemeCoinDeployed","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":true,"internalType":"address","name":"pair","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"LiquidityAdded","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"DeployFeePaid","type":"event"},
+            {"inputs":[{"internalType":"address","name":"memeCoinAddress","type":"address"}],"name":"addLiquidity","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_symbol","type":"string"}],"name":"deployMemeCoin","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"depositWGDOG","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getRecentMemeCoins","outputs":[{"components":[{"internalType":"address","name":"memeCoin","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint256","name":"deployTime","type":"uint256"},{"internalType":"address","name":"pair","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"}],"internalType":"struct GdogSwap.MemeCoinInfo[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"memeCoinAddress","type":"address"}],"name":"hasLiquidityAdded","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"isMemeCoin","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userMemeCoins","outputs":[{"internalType":"address","name":"memeCoin","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint256","name":"deployTime","type":"uint256"},{"internalType":"address","name":"pair","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"WGDOG","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"}
+        ];
+
+        const erc20Abi = [
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},
+            {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"type":"function"},
+            {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"type":"function"}
+        ];
+
+        const chains = {
+            GateLayer: {
+                chainId: 10088,
+                chainName: 'Gate Layer',
+                rpcUrl: 'https://gatelayer-mainnet.gatenode.cc/',
+                blockExplorer: 'https://www.gatescan.org/gatelayer/',
+                nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 }
+            }
+        };
+
+        let web3, account, GdogSwapContract, WGDOGContract;
+        let hasApprovedWGDOG = false;
+
+        const dogMessages = {
+            connectSuccess: ["汪！钱包已连接，准备搞乱迷因币！", "嗷！连接成功，准备起飞！", "汪汪！钱包就位，开始行动！"],
+            connectFail: ["汪！钱包连接失败，再试一次！", "嗷！连接出错，检查一下钱包！", "汪汪！连接失败，稍后再试！"],
+            deployStart: ["汪！正在部署你的迷因币，稍等！", "嗷！代币创建中，马上搞定！", "汪汪！部署进行中，稳住！"],
+            deploySuccess: ["汪！迷因币部署成功，起飞啦！", "嗷！代币上线，准备交易！", "汪汪！成功创建迷因币！"],
+            deployFail: ["汪！部署失败，检查余额和输入！", "嗷！部署出错，再试一次！", "汪汪！部署失败，检查一下！"],
+            liquidityStart: ["汪！正在添加流动性，稍等！", "嗷！流动池创建中，马上好！", "汪汪！流动性添加中，稳住！"],
+            liquiditySuccess: ["汪！流动性添加成功，可以交易啦！", "嗷！流动池已上线！", "汪汪！流动性添加完成！"],
+            liquidityFail: ["汪！添加流动性失败，检查代币！", "嗷！添加出错，再试一次！", "汪汪！流动性添加失败，检查！"],
+            invalidInput: ["汪！输入无效，检查一下！", "嗷！数据不对，重新输入！", "汪汪！需要正确信息！"],
+            userDenied: ["汪！交易被取消，再试一次！", "嗷！你取消了交易，重新来！", "汪汪！交易被拒绝，试试看！"],
+            copySuccess: ["汪！地址已复制到剪贴板！", "嗷！复制成功，随时粘贴！", "汪汪！地址复制完成！"],
+            copyFail: ["汪！复制地址失败，再试一次！", "嗷！复制出错，检查浏览器！", "汪汪！无法复制，稍后再试！"],
+            liquidityExists: ["汪！此代币已添加流动性！", "嗷！流动池已存在，换个代币！", "汪汪！已添加流动性，检查一下！"]
+        };
+
+        function getRandomMessage(type) {
+            const messages = dogMessages[type];
+            return messages[Math.floor(Math.random() * messages.length)];
+        }
+
+        async function copyContract() {
+            try {
+                await navigator.clipboard.writeText(GdogSwapAddress);
+                const notification = document.createElement('div');
+                notification.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                notification.textContent = getRandomMessage('copySuccess');
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transition = 'opacity 0.3s';
+                    setTimeout(() => document.body.removeChild(notification), 300);
+                }, 2000);
+            } catch (error) {
+                document.getElementById('networkStatus').innerText = getRandomMessage('copyFail');
+            }
+        }
+
+        async function initializeWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    account = (await web3.eth.getAccounts())[0];
+                    document.getElementById('connectWalletButton').innerText = `已连接: ${account.slice(0, 6)}...${account.slice(-4)}`;
+                    await switchNetwork('GateLayer');
+                    await initializeContracts();
+                    await updateBalances();
+                    await updateRecentMemeCoins();
+                    document.getElementById('networkStatus').innerText = '已连接到Gate Layer (ID: 10088)';
+                    document.getElementById('deployMemeCoinButton').disabled = false;
+                    document.getElementById('dogMessage').innerText = getRandomMessage('connectSuccess');
+                } catch (error) {
+                    document.getElementById('networkStatus').innerText = '钱包连接失败: ' + (error.message || '未知错误');
+                    document.getElementById('dogMessage').innerText = getRandomMessage('connectFail');
+                }
+            } else {
+                document.getElementById('networkStatus').innerText = '请安装MetaMask';
+                document.getElementById('dogMessage').innerText = '汪！请安装MetaMask！';
+            }
+        }
+
+        async function switchNetwork(chain) {
+            const chainConfig = chains[chain];
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: `0x${chainConfig.chainId.toString(16)}` }]
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: `0x${chainConfig.chainId.toString(16)}`,
+                            chainName: chainConfig.chainName,
+                            rpcUrls: [chainConfig.rpcUrl],
+                            nativeCurrency: chainConfig.nativeCurrency,
+                            blockExplorerUrls: [chainConfig.blockExplorer]
+                        }]
+                    });
+                } else {
+                    throw switchError;
+                }
+            }
+        }
+
+        async function initializeContracts() {
+            GdogSwapContract = new web3.eth.Contract(GdogSwapAbi, GdogSwapAddress);
+            WGDOGContract = new web3.eth.Contract(erc20Abi, WGDOGAddress);
+        }
+
+        async function updateBalances() {
+            if (!web3 || !account) return;
+            try {
+                const WGDOGBalance = await WGDOGContract.methods.balanceOf(account).call();
+                document.getElementById('balanceStatus').innerText = `WGDOG余额: ${Number(web3.utils.fromWei(WGDOGBalance, 'ether')).toLocaleString()}`;
+            } catch (error) {
+                document.getElementById('balanceStatus').innerText = 'WGDOG余额: 错误';
+            }
+        }
+
+        async function updateRecentMemeCoins() {
+            if (!web3 || !account) return;
+            try {
+                const memeCoins = await GdogSwapContract.methods.getRecentMemeCoins(account).call();
+                const container = document.getElementById('recentMemeCoins');
+                container.innerHTML = '';
+                if (memeCoins.length === 0) {
+                    container.innerHTML = '<p class="text-light-gray text-sm">尚未部署迷因币</p>';
+                } else {
+                    memeCoins.forEach(coin => {
+                        const liquidityStatus = coin.pair === '0x0000000000000000000000000000000000000000' ? '无流动性' : '已添加流动性';
+                        const p = document.createElement('p');
+                        p.innerHTML = `${coin.name} (${coin.symbol}): <span class="cursor-pointer text-accent hover:text-secondary transition-colors" onclick="copyToClipboard('${coin.memeCoin}')">${coin.memeCoin}</span> - ${liquidityStatus}`;
+                        container.appendChild(p);
+                    });
+                }
+            } catch (error) {
+                document.getElementById('recentMemeCoins').innerHTML = '<p class="text-light-gray text-sm">获取迷因币失败</p>';
+            }
+        }
+
+        async function copyToClipboard(address) {
+            try {
+                await navigator.clipboard.writeText(address);
+                document.getElementById('dogMessage').innerText = getRandomMessage('copySuccess');
+            } catch (error) {
+                document.getElementById('dogMessage').innerText = getRandomMessage('copyFail');
+            }
+        }
+
+        async function waitForTransaction(txHash) {
+            let receipt = null;
+            const maxAttempts = 30;
+            let attempts = 0;
+            while (attempts < maxAttempts) {
+                receipt = await web3.eth.getTransactionReceipt(txHash);
+                if (receipt) {
+                    if (receipt.status) return receipt;
+                    throw new Error(`交易 ${txHash} 失败`);
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                attempts++;
+            }
+            throw new Error(`交易 ${txHash} 未在${maxAttempts}次尝试后确认`);
+        }
+
+        async function approveWGDOG() {
+            const status = document.getElementById('networkStatus');
+            try {
+                status.innerText = '正在授权WGDOG...';
+                const txApprove = await WGDOGContract.methods.approve(GdogSwapAddress, DEPLOY_FEE).send({
+                    from: account,
+                    gas: web3.utils.toHex(100000)
+                });
+                await waitForTransaction(txApprove.transactionHash);
+                hasApprovedWGDOG = true;
+                status.innerText = 'WGDOG授权成功！';
+                return true;
+            } catch (error) {
+                status.innerText = error.code === 4001 ? '用户取消授权' : `授权失败: ${error.message}`;
+                return false;
+            }
+        }
+
+        async function deployMemeCoin() {
+            const status = document.getElementById('networkStatus');
+            const deployButton = document.getElementById('deployMemeCoinButton');
+            const dogMessage = document.getElementById('dogMessage');
+            const name = document.getElementById('memeCoinName').value.trim();
+            const symbol = document.getElementById('memeCoinSymbol').value.trim();
+
+            if (!web3 || !account) {
+                status.innerText = '请连接钱包';
+                dogMessage.innerText = getRandomMessage('connectFail');
+                return;
+            }
+
+            if (!name || !symbol) {
+                status.innerText = '请输入有效的代币名称和符号';
+                dogMessage.innerText = getRandomMessage('invalidInput');
+                return;
+            }
+
+            try {
+                deployButton.disabled = true;
+                deployButton.innerHTML = '正在部署... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = '正在部署迷因币...';
+                dogMessage.innerText = getRandomMessage('deployStart');
+
+                const WGDOGBalance = await WGDOGContract.methods.balanceOf(account).call();
+                if (web3.utils.toBN(WGDOGBalance).lt(web3.utils.toBN(DEPLOY_FEE))) {
+                    status.innerText = 'WGDOG余额不足以支付部署费用';
+                    dogMessage.innerText = '汪！WGDOG不足10个！';
+                    return;
+                }
+
+                const allowance = await WGDOGContract.methods.allowance(account, GdogSwapAddress).call();
+                if (web3.utils.toBN(allowance).lt(web3.utils.toBN(DEPLOY_FEE))) {
+                    const approved = await approveWGDOG();
+                    if (!approved) return;
+                }
+
+                const tx = await GdogSwapContract.methods.deployMemeCoin(name, symbol).send({
+                    from: account,
+                    gas: web3.utils.toHex(3000000)
+                });
+                await waitForTransaction(tx.transactionHash);
+
+                status.innerText = '迷因币部署成功！';
+                dogMessage.innerText = getRandomMessage('deploySuccess');
+                await updateRecentMemeCoins();
+                await updateBalances();
+            } catch (error) {
+                status.innerText = error.code === 4001 ? '用户取消交易' : `部署失败: ${error.message}`;
+                dogMessage.innerText = getRandomMessage('deployFail');
+            } finally {
+                deployButton.disabled = false;
+                deployButton.innerHTML = '部署迷因币';
+            }
+        }
+
+        async function checkLiquidityStatus() {
+            const memeCoinAddress = document.getElementById('memeCoinAddress').value.trim();
+            const liquidityButton = document.getElementById('addLiquidityButton');
+            const status = document.getElementById('networkStatus');
+            const dogMessage = document.getElementById('dogMessage');
+
+            liquidityButton.disabled = true;
+
+            if (!web3 || !account) {
+                status.innerText = '请连接钱包';
+                dogMessage.innerText = getRandomMessage('connectFail');
+                return;
+            }
+
+            if (!memeCoinAddress || !web3.utils.isAddress(memeCoinAddress)) {
+                status.innerText = '请输入有效的迷因币地址';
+                dogMessage.innerText = getRandomMessage('invalidInput');
+                return;
+            }
+
+            try {
+                const hasLiquidity = await GdogSwapContract.methods.hasLiquidityAdded(memeCoinAddress).call();
+                if (hasLiquidity) {
+                    liquidityButton.disabled = true;
+                    status.innerText = '此代币已添加流动性';
+                    dogMessage.innerText = getRandomMessage('liquidityExists');
+                } else {
+                    liquidityButton.disabled = false;
+                    status.innerText = '可以添加流动性';
+                    dogMessage.innerText = '汪！可以添加流动性！';
+                }
+            } catch (error) {
+                liquidityButton.disabled = false;
+                status.innerText = '检查流动性状态失败，但可以尝试添加';
+                dogMessage.innerText = '汪！尝试添加流动性！';
+            }
+        }
+
+        async function addLiquidity() {
+            const status = document.getElementById('networkStatus');
+            const liquidityButton = document.getElementById('addLiquidityButton');
+            const dogMessage = document.getElementById('dogMessage');
+            const memeCoinAddress = document.getElementById('memeCoinAddress').value.trim();
+
+            if (!web3 || !account) {
+                status.innerText = '请连接钱包';
+                dogMessage.innerText = getRandomMessage('connectFail');
+                return;
+            }
+
+            if (!web3.utils.isAddress(memeCoinAddress)) {
+                status.innerText = '请输入有效的迷因币地址';
+                dogMessage.innerText = getRandomMessage('invalidInput');
+                return;
+            }
+
+            try {
+                liquidityButton.disabled = true;
+                liquidityButton.innerHTML = '正在添加... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = '正在添加流动性...';
+                dogMessage.innerText = getRandomMessage('liquidityStart');
+
+                const tx = await GdogSwapContract.methods.addLiquidity(memeCoinAddress).send({
+                    from: account,
+                    gas: web3.utils.toHex(5000000)
+                });
+                await waitForTransaction(tx.transactionHash);
+
+                status.innerText = '流动性添加成功！';
+                dogMessage.innerText = getRandomMessage('liquiditySuccess');
+                await updateRecentMemeCoins();
+                await updateBalances();
+                await checkLiquidityStatus();
+            } catch (error) {
+                status.innerText = error.code === 4001 ? '用户取消交易' : `添加流动性失败: ${error.message}`;
+                dogMessage.innerText = getRandomMessage('liquidityFail');
+            } finally {
+                liquidityButton.disabled = false;
+                liquidityButton.innerHTML = '添加流动性';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('connectWalletButton').addEventListener('click', initializeWeb3);
+            document.getElementById('deployMemeCoinButton').addEventListener('click', deployMemeCoin);
+            document.getElementById('addLiquidityButton').addEventListener('click', addLiquidity);
+            document.getElementById('memeCoinAddress').addEventListener('input', checkLiquidityStatus);
+
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                menuToggle.innerHTML = mobileMenu.classList.contains('hidden')
+                    ? '<i class="fa fa-bars"></i>'
+                    : '<i class="fa fa-times"></i>';
+            });
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mobileMenu.classList.add('hidden');
+                    menuToggle.innerHTML = '<i class="fa fa-bars"></i>';
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            window.addEventListener('scroll', () => {
+                const navbar = document.getElementById('navbar');
+                if (window.scrollY > 50) {
+                    navbar.classList.add('bg-dark/95', 'shadow-lg');
+                } else {
+                    navbar.classList.remove('bg-dark/95', 'shadow-lg');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

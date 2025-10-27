@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gatefunfun - 代币兑换</title>
-    <link rel="icon" type="image/png" href="https://www.woofswap.finance/image/tokens/gdog.png">
+    <title>GING - 代币兑换</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/WoofingLabs/ging/refs/heads/main/ging.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script>
@@ -54,9 +54,9 @@
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3 cursor-pointer hover:text-primary transition-colors">
                 <div class="w-10 h-10 rounded-full overflow-hidden">
-                    <img src="https://www.woofswap.finance/image/tokens/gdog.png" alt="GDOG Logo" class="w-full h-full object-cover">
+                    <img src="https://raw.githubusercontent.com/WoofingLabs/ging/refs/heads/main/ging.png" alt="GING Logo" class="w-full h-full object-cover">
                 </div>
-                <span class="font-display text-3xl text-primary text-shadow-glow">Gatefunfun</span>
+                <span class="font-display text-3xl text-primary text-shadow-glow">GING</span>
             </div>
             <button id="menuToggle" class="md:hidden text-2xl text-primary">
                 <i class="fa fa-bars"></i>
@@ -75,11 +75,11 @@
         <div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
         <div class="container mx-auto px-4 text-center relative z-10">
             <div class="w-48 h-48 mx-auto mb-8 animate-float">
-                <img src="https://www.woofswap.finance/image/tokens/gdog.png" alt="GDOG Logo" class="w-full h-full object-cover rounded-full border-4 border-secondary/50 glow-border">
+                <img src="https://raw.githubusercontent.com/WoofingLabs/ging/refs/heads/main/ging.png" alt="GING Logo" class="w-full h-full object-cover rounded-full border-4 border-secondary/50 glow-border">
             </div>
-            <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">Gatefunfun</h1>
+            <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">GING</h1>
             <p class="text-xl md:text-2xl text-light-gray max-w-3xl mx-auto mb-10">
-                参与Gatefunfun社区，1:1兑换GINGgatefun和GINGx402！
+                参与GING社区，1:1兑换GINGgatefun和GINGx402！
             </p>
             <div class="bg-dark/50 p-6 rounded-lg border border-primary/30 max-w-2xl mx-auto mb-8">
                 <div class="flex flex-col space-y-4">
@@ -96,19 +96,6 @@
                         <p id="balanceStatus" class="text-light-gray text-sm">GT余额: 0 | GINGgatefun: 0 | GINGx402: 0</p>
                     </div>
                     <div class="flex flex-col space-y-2">
-                        <label class="block text-left text-light-gray mb-2">授权代币</label>
-                        <input type="text" id="approveAmount" placeholder="输入授权金额" class="px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
-                        <div class="flex space-x-2">
-                            <button id="approveGatefunButton" class="flex-1 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>授权GINGgatefun</button>
-                            <button id="approveX402Button" class="flex-1 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>授权GINGx402</button>
-                        </div>
-                    </div>
-                    <div class="flex flex-col space-y-2">
-                        <label class="block text-left text-light-gray mb-2">Owner充值GINGx402</label>
-                        <input type="text" id="depositAmount" placeholder="输入充值金额" class="px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
-                        <button id="depositButton" class="mt-2 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>充值GINGx402</button>
-                    </div>
-                    <div class="flex flex-col space-y-2">
                         <label class="block text-left text-light-gray mb-2">兑换GINGgatefun到GINGx402</label>
                         <input type="text" id="swapToX402Amount" placeholder="输入兑换金额" class="px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
                         <p id="swapToX402Info" class="text-light-gray text-sm">可兑换GINGx402：请先输入金额查询</p>
@@ -121,7 +108,7 @@
                         <button id="swapToGatefunButton" class="mt-2 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>兑换到GINGgatefun</button>
                     </div>
                     <div class="mt-4">
-                        <img src="https://www.woofswap.finance/image/tokens/gdog.png" alt="GDOG Logo" class="w-16 h-16 mx-auto animate-float">
+                        <img src="https://raw.githubusercontent.com/WoofingLabs/ging/refs/heads/main/ging.png" alt="GING Logo" class="w-16 h-16 mx-auto animate-float">
                     </div>
                 </div>
             </div>
@@ -130,7 +117,7 @@
 
     <footer class="bg-dark/95 py-12 border-t border-primary/20">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-light-gray text-sm">© 2025 Gatefunfun社区。保留所有权利。请自行研究并谨慎投资。</p>
+            <p class="text-light-gray text-sm">© 2025 GING社区。保留所有权利。请自行研究并谨慎投资。</p>
         </div>
     </footer>
 
@@ -141,9 +128,7 @@
         const GING_X402_ADDRESS = '0x2fA5112755141F43F76E4b618b16591C36cB368c';
         const swapContractAbi = [
             {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
-            {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Deposited","type":"event"},
             {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"bool","name":"toGingX402","type":"bool"}],"name":"Swapped","type":"event"},
-            {"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"depositGingX402","outputs":[],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"swapToGingGatefun","outputs":[],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"swapToGingX402","outputs":[],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[],"name":"gingGatefun","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},
@@ -214,7 +199,7 @@
                     swapContract = new web3.eth.Contract(swapContractAbi, SWAP_CONTRACT_ADDRESS);
                     gingGatefun = new web3.eth.Contract(erc20Abi, GING_GATEFUN_ADDRESS);
                     gingX402 = new web3.eth.Contract(erc20Abi, GING_X402_ADDRESS);
-                    await checkBalancesAndAllowances();
+                    await checkBalances();
                     document.getElementById('networkStatus').innerText = '已连接到Gate Layer (ID: 10088)';
                 } catch (error) {
                     document.getElementById('networkStatus').innerText = '钱包连接失败: ' + (error.message || '未知错误');
@@ -249,41 +234,27 @@
             }
         }
 
-        async function checkBalancesAndAllowances() {
+        async function checkBalances() {
             if (!web3 || !account) {
-                document.getElementById('depositButton').disabled = true;
                 document.getElementById('swapToX402Button').disabled = true;
                 document.getElementById('swapToGatefunButton').disabled = true;
-                document.getElementById('approveGatefunButton').disabled = true;
-                document.getElementById('approveX402Button').disabled = true;
                 document.getElementById('balanceStatus').innerHTML = 'GT余额: 0 | GINGgatefun: 0 | GINGx402: 0';
                 return;
             }
             try {
-                document.getElementById('networkStatus').innerText = '查询余额和授权...';
+                document.getElementById('networkStatus').innerText = '查询余额...';
                 const gtBalance = await retryContractCall(() => web3.eth.getBalance(account));
                 const gatefunBalance = await retryContractCall(() => gingGatefun.methods.balanceOf(account).call());
                 const x402Balance = await retryContractCall(() => gingX402.methods.balanceOf(account).call());
-                const gatefunAllowance = await retryContractCall(() => gingGatefun.methods.allowance(account, SWAP_CONTRACT_ADDRESS).call());
-                const x402Allowance = await retryContractCall(() => gingX402.methods.allowance(account, SWAP_CONTRACT_ADDRESS).call());
                 const gtBalanceFormatted = Number(web3.utils.fromWei(gtBalance, 'ether')).toFixed(4);
                 const gatefunBalanceFormatted = Number(web3.utils.fromWei(gatefunBalance, 'ether')).toFixed(4);
                 const x402BalanceFormatted = Number(web3.utils.fromWei(x402Balance, 'ether')).toFixed(4);
                 document.getElementById('balanceStatus').innerHTML = `GT余额: ${gtBalanceFormatted} | GINGgatefun: ${gatefunBalanceFormatted} | GINGx402: ${x402BalanceFormatted}`;
-                const owner = await retryContractCall(() => swapContract.methods.owner().call());
-                const isOwner = account.toLowerCase() === owner.toLowerCase();
-                document.getElementById('depositButton').disabled = !isOwner;
-                document.getElementById('approveGatefunButton').disabled = false;
-                document.getElementById('approveX402Button').disabled = false;
-                document.getElementById('networkStatus').innerText = '余额和授权已更新';
-                return { gatefunAllowance, x402Allowance, gatefunBalance, x402Balance };
+                document.getElementById('networkStatus').innerText = '余额已更新';
             } catch (error) {
                 document.getElementById('networkStatus').innerText = `查询失败: ${error.message || '未知错误'}`;
-                document.getElementById('depositButton').disabled = true;
                 document.getElementById('swapToX402Button').disabled = true;
                 document.getElementById('swapToGatefunButton').disabled = true;
-                document.getElementById('approveGatefunButton').disabled = true;
-                document.getElementById('approveX402Button').disabled = true;
             }
         }
 
@@ -305,14 +276,13 @@
                 const contractBalance = toGingX402
                     ? await retryContractCall(() => gingX402.methods.balanceOf(SWAP_CONTRACT_ADDRESS).call())
                     : await retryContractCall(() => gingGatefun.methods.balanceOf(SWAP_CONTRACT_ADDRESS).call());
-                const { gatefunAllowance, x402Allowance, gatefunBalance, x402Balance } = await checkBalancesAndAllowances();
-                const userBalance = toGingX402 ? gatefunBalance : x402Balance;
-                const allowance = toGingX402 ? gatefunAllowance : x402Allowance;
+                const userBalance = toGingX402
+                    ? await retryContractCall(() => gingGatefun.methods.balanceOf(account).call())
+                    : await retryContractCall(() => gingX402.methods.balanceOf(account).call());
                 const contractBalanceFormatted = Number(web3.utils.fromWei(contractBalance, 'ether')).toFixed(4);
                 infoElement.innerHTML = `可兑换${toGingX402 ? 'GINGx402' : 'GINGgatefun'}: ${contractBalanceFormatted}`;
                 const isSufficient = web3.utils.toBN(contractBalance).gte(web3.utils.toBN(amountWei)) &&
-                                    web3.utils.toBN(userBalance).gte(web3.utils.toBN(amountWei)) &&
-                                    web3.utils.toBN(allowance).gte(web3.utils.toBN(amountWei));
+                                    web3.utils.toBN(userBalance).gte(web3.utils.toBN(amountWei));
                 buttonElement.disabled = !isSufficient;
                 return isSufficient;
             } catch (error) {
@@ -333,7 +303,7 @@
                 const gasCost = web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas));
                 if (web3.utils.toBN(nativeBalance).lt(gasCost)) {
                     document.getElementById('networkStatus').innerText = 'GT余额不足以支付燃气费';
-                    return;
+                    return false;
                 }
                 const tx = await tokenContract.methods.approve(SWAP_CONTRACT_ADDRESS, amountWei).send({
                     from: account,
@@ -342,62 +312,14 @@
                 });
                 await waitForTransaction(tx.transactionHash);
                 document.getElementById('networkStatus').innerText = '授权成功！';
-                await checkBalancesAndAllowances();
-                await querySwapAvailability(document.getElementById('swapToX402Amount').value, true);
-                await querySwapAvailability(document.getElementById('swapToGatefunAmount').value, false);
+                return true;
             } catch (error) {
                 document.getElementById('networkStatus').innerText = error.code === 4001 ? '用户取消交易' : `授权失败: ${error.message}`;
                 console.error('Approve Error:', error);
+                return false;
             } finally {
                 buttonElement.disabled = false;
-                buttonElement.innerHTML = `授权${tokenContract._address === GING_GATEFUN_ADDRESS ? 'GINGgatefun' : 'GINGx402'}`;
-            }
-        }
-
-        async function depositGingX402() {
-            const amount = document.getElementById('depositAmount').value;
-            const status = document.getElementById('networkStatus');
-            const depositButton = document.getElementById('depositButton');
-            if (!web3 || !account) {
-                status.innerText = '请连接钱包';
-                return;
-            }
-            if (!amount || isNaN(amount) || Number(amount) <= 0) {
-                status.innerText = '请输入有效的充值金额';
-                return;
-            }
-            try {
-                depositButton.disabled = true;
-                depositButton.innerHTML = '充值中... <i class="fa fa-spinner fa-spin ml-2"></i>';
-                status.innerText = '检查燃气费和余额...';
-                const amountWei = web3.utils.toWei(amount.toString(), 'ether');
-                const gasPrice = await web3.eth.getGasPrice();
-                const estimatedGas = await swapContract.methods.depositGingX402(amountWei).estimateGas({ from: account });
-                const nativeBalance = await web3.eth.getBalance(account);
-                const gasCost = web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas));
-                if (web3.utils.toBN(nativeBalance).lt(gasCost)) {
-                    status.innerText = 'GT余额不足以支付燃气费';
-                    return;
-                }
-                const allowance = await gingX402.methods.allowance(account, SWAP_CONTRACT_ADDRESS).call();
-                if (web3.utils.toBN(allowance).lt(web3.utils.toBN(amountWei))) {
-                    status.innerText = '请先授权足够数量的GINGx402';
-                    return;
-                }
-                const tx = await swapContract.methods.depositGingX402(amountWei).send({
-                    from: account,
-                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 3000000)),
-                    gasPrice
-                });
-                await waitForTransaction(tx.transactionHash);
-                status.innerText = '充值成功！';
-                await checkBalancesAndAllowances();
-            } catch (error) {
-                status.innerText = error.code === 4001 ? '用户取消交易' : `充值失败: ${error.message}`;
-                console.error('Deposit Error:', error);
-            } finally {
-                depositButton.disabled = false;
-                depositButton.innerHTML = '充值GINGx402';
+                buttonElement.innerHTML = `兑换到${tokenContract._address === GING_GATEFUN_ADDRESS ? 'GINGx402' : 'GINGgatefun'}`;
             }
         }
 
@@ -416,14 +338,23 @@
             }
             try {
                 swapButton.disabled = true;
-                swapButton.innerHTML = '兑换中... <i class="fa fa-spinner fa-spin ml-2"></i>';
-                status.innerText = '检查燃气费和余额...';
+                swapButton.innerHTML = '检查中... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = '检查余额和授权...';
                 const amountWei = web3.utils.toWei(amount.toString(), 'ether');
                 const isSufficient = await querySwapAvailability(amount, toGingX402);
                 if (!isSufficient) {
-                    status.innerText = `余额不足、授权不足或合约${toGingX402 ? 'GINGx402' : 'GINGgatefun'}不足`;
+                    status.innerText = `余额不足或合约${toGingX402 ? 'GINGx402' : 'GINGgatefun'}不足`;
                     return;
                 }
+                const tokenContract = toGingX402 ? gingGatefun : gingX402;
+                const allowance = await retryContractCall(() => tokenContract.methods.allowance(account, SWAP_CONTRACT_ADDRESS).call());
+                if (web3.utils.toBN(allowance).lt(web3.utils.toBN(amountWei))) {
+                    swapButton.innerHTML = '授权中... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                    const approved = await approveToken(tokenContract, amountWei, swapButton);
+                    if (!approved) return;
+                }
+                swapButton.innerHTML = '兑换中... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = '检查燃气费...';
                 const gasPrice = await web3.eth.getGasPrice();
                 const method = toGingX402 ? swapContract.methods.swapToGingX402 : swapContract.methods.swapToGingGatefun;
                 const estimatedGas = await method(amountWei).estimateGas({ from: account });
@@ -440,7 +371,7 @@
                 });
                 await waitForTransaction(tx.transactionHash);
                 status.innerText = '兑换成功！';
-                await checkBalancesAndAllowances();
+                await checkBalances();
                 await querySwapAvailability(amount, toGingX402);
             } catch (error) {
                 status.innerText = error.code === 4001 ? '用户取消交易' : `兑换失败: ${error.message}`;
@@ -469,25 +400,8 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('connectWalletButton').addEventListener('click', initializeWeb3);
-            document.getElementById('approveGatefunButton').addEventListener('click', () => approveToken(gingGatefun, web3.utils.toWei(document.getElementById('approveAmount').value || '0', 'ether'), document.getElementById('approveGatefunButton')));
-            document.getElementById('approveX402Button').addEventListener('click', () => approveToken(gingX402, web3.utils.toWei(document.getElementById('approveAmount').value || '0', 'ether'), document.getElementById('approveX402Button')));
-            document.getElementById('depositButton').addEventListener('click', depositGingX402);
             document.getElementById('swapToX402Button').addEventListener('click', () => swapTokens(true));
             document.getElementById('swapToGatefunButton').addEventListener('click', () => swapTokens(false));
-
-            document.getElementById('approveAmount').addEventListener('input', () => {
-                const amount = document.getElementById('approveAmount').value;
-                const isValid = amount && !isNaN(amount) && Number(amount) > 0;
-                document.getElementById('approveGatefunButton').disabled = !isValid;
-                document.getElementById('approveX402Button').disabled = !isValid;
-            });
-
-            document.getElementById('depositAmount').addEventListener('input', async () => {
-                const amount = document.getElementById('depositAmount').value;
-                const owner = await retryContractCall(() => swapContract.methods.owner().call());
-                const isValid = amount && !isNaN(amount) && Number(amount) > 0;
-                document.getElementById('depositButton').disabled = account.toLowerCase() !== owner.toLowerCase() || !isValid;
-            });
 
             document.getElementById('swapToX402Amount').addEventListener('input', async () => {
                 const amount = document.getElementById('swapToX402Amount').value;

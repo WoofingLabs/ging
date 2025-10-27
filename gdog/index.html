@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GDOG - 代币兑换</title>
+    <link rel="icon" type="image/png" href="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0068FF',
+                        secondary: '#18E5A0',
+                        accent: '#FFD700',
+                        dark: '#070808',
+                        'light-gray': '#E5E7EB'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Changa One', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        .text-shadow-glow {
+            text-shadow: 0 0 10px rgba(0, 104, 255, 0.5);
+        }
+        .glow-border {
+            box-shadow: 0 0 12px rgba(24, 229, 160, 0.3);
+        }
+        .bg-grid {
+            background-image: url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Ccircle cx="1" cy="1" r="1" fill="%230068FF" fill-opacity="0.1"/%3E%3C/svg%3E');
+            background-size: 20px 20px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Changa+One&display=swap" rel="stylesheet">
+</head>
+<body class="bg-dark text-white font-sans overflow-x-hidden">
+    <header class="fixed w-full z-50 bg-dark/90 backdrop-blur-md transition-all duration-300" id="navbar">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer hover:text-primary transition-colors">
+                <div class="w-10 h-10 rounded-full overflow-hidden">
+                    <img src="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png" alt="GDOG Logo" class="w-full h-full object-cover">
+                </div>
+                <span class="font-display text-3xl text-primary text-shadow-glow">GDOG</span>
+            </div>
+            <button id="menuToggle" class="md:hidden text-2xl text-primary">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        <div id="mobileMenu" class="md:hidden bg-dark/95 absolute w-full top-full py-4 px-4 hidden">
+            <div class="flex flex-col space-y-4">
+                <a href="#swap" class="hover:text-primary transition-colors py-2 text-white">代币兑换</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="swap" class="min-h-screen pt-24 pb-16 bg-grid relative overflow-hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-gradient-to-b from-primary/10 to-dark pointer-events-none"></div>
+        <div class="absolute top-0 left-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <div class="w-48 h-48 mx-auto mb-8 animate-float">
+                <img src="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png" alt="GDOG Logo" class="w-full h-full object-cover rounded-full border-4 border-secondary/50 glow-border">
+            </div>
+            <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">GDOG</h1>
+            <p class="text-xl md:text-2xl text-light-gray max-w-3xl mx-auto mb-10">
+                参与GDOG社区，1:1兑换GDOGgatefun和GDOGx402！
+            </p>
+            <div class="bg-dark/50 p-6 rounded-lg border border-primary/30 max-w-2xl mx-auto mb-8">
+                <div class="flex flex-col space-y-4">
+                    <button id="connectWalletButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">连接钱包</button>
+                    <p id="networkStatus" class="text-light-gray text-sm">点击连接钱包...</p>
+                    <div class="flex items-center bg-dark/80 p-3 rounded-lg border border-primary/20">
+                        <i class="fa fa-link text-accent mr-3"></i>
+                        <span class="font-mono text-sm text-white truncate">0x60bC17d9A7774ba18B298D584D14178420Df335E</span>
+                        <button class="ml-3 text-light-gray hover:text-secondary transition-colors" onclick="copySwapContract()">
+                            <i class="fa fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="bg-dark/80 p-3 rounded-lg border border-primary/20">
+                        <p id="balanceStatus" class="text-light-gray text-sm">GT余额: 0 | GDOGgatefun: 0 | GDOGx402: 0</p>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="block text-left text-light-gray mb-2">兑换GDOGgatefun到GDOGx402</label>
+                        <input type="text" id="swapToX402Amount" placeholder="输入兑换金额" class="px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                        <p id="swapToX402Info" class="text-light-gray text-sm">可兑换GDOGx402：请先输入金额查询</p>
+                        <button id="swapToX402Button" class="mt-2 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>兑换到GDOGx402</button>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="block text-left text-light-gray mb-2">兑换GDOGx402到GDOGgatefun</label>
+                        <input type="text" id="swapToGatefunAmount" placeholder="输入兑换金额" class="px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                        <p id="swapToGatefunInfo" class="text-light-gray text-sm">可兑换GDOGgatefun：请先输入金额查询</p>
+                        <button id="swapToGatefunButton" class="mt-2 px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>兑换到GDOGgatefun</button>
+                    </div>
+                    <div class="mt-4">
+                        <img src="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png" alt="GDOG Logo" class="w-16 h-16 mx-auto animate-float">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark/95 py-12 border-t border-primary/20">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-light-gray text-sm">© 2025 GDOG社区。保留所有权利。请自行研究并谨慎投资。</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script>
+        const SWAP_CONTRACT_ADDRESS = '0x60bC17d9A7774ba18B298D584D14178420Df335E';
+        const GDOG_GATEFUN_ADDRESS = '0xf6D9Cf57e20bA0d33372E8998A9424aa53411E04';
+        const GDOG_X402_ADDRESS = '0x41260498c4798be317BAAD4403f6eC6c80411349';
+        const swapContractAbi = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Deposited",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "user",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "bool",
+                        "name": "toGingX402",
+                        "type": "bool"
+                    }
+                ],
+                "name": "Swapped",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "depositGingX402",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "swapToGingGatefun",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "swapToGingX402",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "gdogGatefun",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "gdogX402",
+                "outputs": [
+                    {
+                        "internalType": "contract IERC20",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+        const erc20Abi = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "approve",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    }
+                ],
+                "name": "allowance",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "sender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferFrom",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+        const chains = {
+            GateLayer: {
+                chainId: 10088,
+                chainName: 'Gate Layer',
+                rpcUrl: 'https://gatelayer-mainnet.gatenode.cc',
+                blockExplorer: 'https://www.gatescan.org/gatelayer/',
+                nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 }
+            }
+        };
+
+        let web3, account, swapContract, gdogGatefun, gdogX402;
+
+        async function waitForTransaction(txHash) {
+            let receipt = null;
+            const maxAttempts = 30;
+            let attempts = 0;
+            while (attempts < maxAttempts) {
+                receipt = await web3.eth.getTransactionReceipt(txHash);
+                if (receipt) {
+                    if (receipt.status) return receipt;
+                    throw new Error(`交易 ${txHash} 失败`);
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                attempts++;
+            }
+            throw new Error(`交易 ${txHash} 未在 ${maxAttempts} 次尝试后确认`);
+        }
+
+        async function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function retryContractCall(fn, maxRetries = 12, delayMs = 3000) {
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    return await Promise.race([
+                        fn(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('查询超时')), 15000))
+                    ]);
+                } catch (error) {
+                    console.error(`尝试 ${attempt}/${maxRetries} 失败: ${error.message}`);
+                    if (attempt === maxRetries) throw error;
+                    await delay(delayMs);
+                }
+            }
+        }
+
+        async function initializeWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    account = (await web3.eth.getAccounts())[0];
+                    document.getElementById('connectWalletButton').innerText = `已连接: ${account.slice(0, 6)}...${account.slice(-4)}`;
+                    await switchNetwork('GateLayer');
+                    swapContract = new web3.eth.Contract(swapContractAbi, SWAP_CONTRACT_ADDRESS);
+                    gdogGatefun = new web3.eth.Contract(erc20Abi, GDOG_GATEFUN_ADDRESS);
+                    gdogX402 = new web3.eth.Contract(erc20Abi, GDOG_X402_ADDRESS);
+                    await checkBalances();
+                    document.getElementById('networkStatus').innerText = '已连接到Gate Layer (ID: 10088)';
+                } catch (error) {
+                    document.getElementById('networkStatus').innerText = '钱包连接失败: ' + (error.message || '未知错误');
+                }
+            } else {
+                document.getElementById('networkStatus').innerText = '请安装MetaMask';
+            }
+        }
+
+        async function switchNetwork(chain) {
+            const chainConfig = chains[chain];
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: `0x${chainConfig.chainId.toString(16)}` }]
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: `0x${chainConfig.chainId.toString(16)}`,
+                            chainName: chainConfig.chainName,
+                            rpcUrls: [chainConfig.rpcUrl],
+                            nativeCurrency: chainConfig.nativeCurrency,
+                            blockExplorerUrls: [chainConfig.blockExplorer]
+                        }]
+                    });
+                } else {
+                    throw switchError;
+                }
+            }
+        }
+
+        async function checkBalances() {
+            if (!web3 || !account) {
+                document.getElementById('swapToX402Button').disabled = true;
+                document.getElementById('swapToGatefunButton').disabled = true;
+                document.getElementById('balanceStatus').innerHTML = 'GT余额: 0 | GDOGgatefun: 0 | GDOGx402: 0';
+                return;
+            }
+            try {
+                document.getElementById('networkStatus').innerText = '查询余额...';
+                const gtBalance = await retryContractCall(() => web3.eth.getBalance(account));
+                const gatefunBalance = await retryContractCall(() => gdogGatefun.methods.balanceOf(account).call());
+                const x402Balance = await retryContractCall(() => gdogX402.methods.balanceOf(account).call());
+                const gtBalanceFormatted = Number(web3.utils.fromWei(gtBalance, 'ether')).toFixed(4);
+                const gatefunBalanceFormatted = Number(web3.utils.fromWei(gatefunBalance, 'ether')).toFixed(4);
+                const x402BalanceFormatted = Number(web3.utils.fromWei(x402Balance, 'ether')).toFixed(4);
+                document.getElementById('balanceStatus').innerHTML = `GT余额: ${gtBalanceFormatted} | GDOGgatefun: ${gatefunBalanceFormatted} | GDOGx402: ${x402BalanceFormatted}`;
+                document.getElementById('networkStatus').innerText = '余额已更新';
+            } catch (error) {
+                document.getElementById('networkStatus').innerText = `查询失败: ${error.message || '未知错误'}`;
+                document.getElementById('swapToX402Button').disabled = true;
+                document.getElementById('swapToGatefunButton').disabled = true;
+            }
+        }
+
+        async function querySwapAvailability(amount, toGingX402) {
+            const infoElement = toGingX402 ? document.getElementById('swapToX402Info') : document.getElementById('swapToGatefunInfo');
+            const buttonElement = toGingX402 ? document.getElementById('swapToX402Button') : document.getElementById('swapToGatefunButton');
+            if (!web3 || !account) {
+                infoElement.innerText = '请连接钱包';
+                buttonElement.disabled = true;
+                return false;
+            }
+            if (!amount || isNaN(amount) || Number(amount) <= 0) {
+                infoElement.innerText = `可兑换${toGingX402 ? 'GDOGx402' : 'GDOGgatefun'}：请先输入有效金额`;
+                buttonElement.disabled = true;
+                return false;
+            }
+            try {
+                const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+                const contractBalance = toGingX402
+                    ? await retryContractCall(() => gdogX402.methods.balanceOf(SWAP_CONTRACT_ADDRESS).call())
+                    : await retryContractCall(() => gdogGatefun.methods.balanceOf(SWAP_CONTRACT_ADDRESS).call());
+                const userBalance = toGingX402
+                    ? await retryContractCall(() => gdogGatefun.methods.balanceOf(account).call())
+                    : await retryContractCall(() => gdogX402.methods.balanceOf(account).call());
+                const contractBalanceFormatted = Number(web3.utils.fromWei(contractBalance, 'ether')).toFixed(4);
+                infoElement.innerHTML = `可兑换${toGingX402 ? 'GDOGx402' : 'GDOGgatefun'}: ${contractBalanceFormatted}`;
+                const isSufficient = web3.utils.toBN(contractBalance).gte(web3.utils.toBN(amountWei)) &&
+                                    web3.utils.toBN(userBalance).gte(web3.utils.toBN(amountWei));
+                buttonElement.disabled = !isSufficient;
+                return isSufficient;
+            } catch (error) {
+                infoElement.innerText = `查询失败: ${error.message || '未知错误'}`;
+                buttonElement.disabled = true;
+                return false;
+            }
+        }
+
+        async function approveToken(tokenContract, amountWei, buttonElement) {
+            try {
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = '授权中... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                document.getElementById('networkStatus').innerText = '检查燃气费...';
+                const gasPrice = await web3.eth.getGasPrice();
+                const estimatedGas = await tokenContract.methods.approve(SWAP_CONTRACT_ADDRESS, amountWei).estimateGas({ from: account });
+                const nativeBalance = await web3.eth.getBalance(account);
+                const gasCost = web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas));
+                if (web3.utils.toBN(nativeBalance).lt(gasCost)) {
+                    document.getElementById('networkStatus').innerText = 'GT余额不足以支付燃气费';
+                    return false;
+                }
+                const tx = await tokenContract.methods.approve(SWAP_CONTRACT_ADDRESS, amountWei).send({
+                    from: account,
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 3000000)),
+                    gasPrice
+                });
+                await waitForTransaction(tx.transactionHash);
+                document.getElementById('networkStatus').innerText = '授权成功！';
+                return true;
+            } catch (error) {
+                document.getElementById('networkStatus').innerText = error.code === 4001 ? '用户取消交易' : `授权失败: ${error.message}`;
+                console.error('Approve Error:', error);
+                return false;
+            } finally {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = `兑换到${tokenContract._address === GDOG_GATEFUN_ADDRESS ? 'GDOGx402' : 'GDOGgatefun'}`;
+            }
+        }
+
+        async function swapTokens(toGingX402) {
+            const amountInput = toGingX402 ? document.getElementById('swapToX402Amount') : document.getElementById('swapToGatefunAmount');
+            const status = document.getElementById('networkStatus');
+            const swapButton = toGingX402 ? document.getElementById('swapToX402Button') : document.getElementById('swapToGatefunButton');
+            const amount = amountInput.value;
+            if (!web3 || !account) {
+                status.innerText = '请连接钱包';
+                return;
+            }
+            if (!amount || isNaN(amount) || Number(amount) <= 0) {
+                status.innerText = '请输入有效的兑换金额';
+                return;
+            }
+            try {
+                swapButton.disabled = true;
+                swapButton.innerHTML = '检查中... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = '检查余额和授权...';
+                const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+                const isSufficient = await querySwapAvailability(amount, toGingX402);
+                if (!isSufficient) {
+                    status.innerText = `余额不足或合约${toGingX402 ? 'GDOGx402' : 'GDOGgatefun'}不足`;
+                    return;
+                }
+                const tokenContract = toGingX402 ? gdogGatefun : gdogX402;
+                const allowance = await retryContractCall(() => tokenContract.methods.allowance(account, SWAP_CONTRACT_ADDRESS).call());
+                if (web3.utils.toBN(allowance).lt(web3.utils.toBN(amountWei))) {
+                    swapButton.innerHTML = '授权中... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                    const approved = await approveToken(tokenContract, amountWei, swapButton);
+                    if (!approved) return;
+                }
+                swapButton.innerHTML = '兑换中... <i class="fa fa-spinner fa-spin ml-2"></i>';
+                status.innerText = '检查燃气费...';
+                const gasPrice = await web3.eth.getGasPrice();
+                const method = toGingX402 ? swapContract.methods.swapToGingX402 : swapContract.methods.swapToGingGatefun;
+                const estimatedGas = await method(amountWei).estimateGas({ from: account });
+                const nativeBalance = await web3.eth.getBalance(account);
+                const gasCost = web3.utils.toBN(gasPrice).mul(web3.utils.toBN(estimatedGas));
+                if (web3.utils.toBN(nativeBalance).lt(gasCost)) {
+                    status.innerText = 'GT余额不足以支付燃气费';
+                    return;
+                }
+                const tx = await method(amountWei).send({
+                    from: account,
+                    gas: web3.utils.toHex(Math.min(estimatedGas * 2, 3000000)),
+                    gasPrice
+                });
+                await waitForTransaction(tx.transactionHash);
+                status.innerText = '兑换成功！';
+                await checkBalances();
+                await querySwapAvailability(amount, toGingX402);
+            } catch (error) {
+                status.innerText = error.code === 4001 ? '用户取消交易' : `兑换失败: ${error.message}`;
+                console.error('Swap Error:', error);
+            } finally {
+                swapButton.disabled = false;
+                swapButton.innerHTML = `兑换到${toGingX402 ? 'GDOGx402' : 'GDOGgatefun'}`;
+            }
+        }
+
+        function copySwapContract() {
+            navigator.clipboard.writeText(SWAP_CONTRACT_ADDRESS).then(() => {
+                const notification = document.createElement('div');
+                notification.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                notification.textContent = 'Swap合约地址已复制！';
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transition = 'opacity 0.3s';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 2000);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('connectWalletButton').addEventListener('click', initializeWeb3);
+            document.getElementById('swapToX402Button').addEventListener('click', () => swapTokens(true));
+            document.getElementById('swapToGatefunButton').addEventListener('click', () => swapTokens(false));
+
+            document.getElementById('swapToX402Amount').addEventListener('input', async () => {
+                const amount = document.getElementById('swapToX402Amount').value;
+                await querySwapAvailability(amount, true);
+            });
+
+            document.getElementById('swapToGatefunAmount').addEventListener('input', async () => {
+                const amount = document.getElementById('swapToGatefunAmount').value;
+                await querySwapAvailability(amount, false);
+            });
+
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                menuToggle.innerHTML = mobileMenu.classList.contains('hidden')
+                    ? '<i class="fa fa-bars"></i>'
+                    : '<i class="fa fa-times"></i>';
+            });
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    mobileMenu.classList.add('hidden');
+                    menuToggle.innerHTML = '<i class="fa fa-bars"></i>';
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('bg-dark/95', 'shadow-lg');
+                } else {
+                    navbar.classList.remove('bg-dark/95', 'shadow-lg');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

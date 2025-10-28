@@ -126,7 +126,7 @@
             {"constant":true,"inputs":[],"name":"token1","outputs":[{"name":"","type":"address"}],"type":"function"}
         ];
         const routerAbi = [
-            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","":true,"name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"view","type":"function"}
         ];
         const erc20Abi = [
@@ -135,7 +135,6 @@
             {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"type":"function"}
         ];
 
-        // 你原来的网络配置
         const chains = { 
             GateLayer: { 
                 chainId: 10088, 
@@ -316,8 +315,9 @@
             checkAllowance();
         }
 
+        // 关键修复：只改这一行！
         document.getElementById('connectWalletButton').onclick = init;
-        document.getElementById('pairInput')._Part.oninput = updatePair;
+        document.getElementById('pairInput').oninput = updatePair;  // 修复：去掉 ._Part
         document.getElementById('amount').oninput = checkAllowance;
         document.getElementById('slippage').oninput = checkAllowance;
         document.getElementById('approveButton').onclick = approve;

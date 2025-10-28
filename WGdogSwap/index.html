@@ -93,7 +93,7 @@
                     <button id="approveButton" class="px-6 py-3 bg-secondary text-dark rounded-full font-medium hover:bg-secondary/80 transition-all hidden">授权代币 (无限)</button>
 
                     <div>
-                        <label class="block text-left text-light-gray mb-2">输入数量</label>
+                        <label id="amountLabel" class="block text-left text-light-gray mb-2">输入数量</label>
                         <input id="amount" type="text" placeholder="输入数量" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
                     </div>
 
@@ -126,7 +126,7 @@
             {"constant":true,"inputs":[],"name":"token1","outputs":[{"name":"","type":"address"}],"type":"function"}
         ];
         const routerAbi = [
-            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","":true,"name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"view","type":"function"}
         ];
         const erc20Abi = [
@@ -242,6 +242,7 @@
             document.getElementById('approveButton').classList.toggle('hidden', !needsApprove);
             document.getElementById('swapButton').disabled = needsApprove;
             document.getElementById('swapButton').innerText = needsApprove ? '请先授权' : (isBuyMode ? '买' : '卖');
+            document.getElementById('amountLabel').innerText = isBuyMode ? '输入 WGDOG 数量' : '输入代币数量';
         }
 
         async function approve() {
@@ -315,9 +316,8 @@
             checkAllowance();
         }
 
-        // 关键修复：只改这一行！
         document.getElementById('connectWalletButton').onclick = init;
-        document.getElementById('pairInput').oninput = updatePair;  // 修复：去掉 ._Part
+        document.getElementById('pairInput').oninput = updatePair;
         document.getElementById('amount').oninput = checkAllowance;
         document.getElementById('slippage').oninput = checkAllowance;
         document.getElementById('approveButton').onclick = approve;

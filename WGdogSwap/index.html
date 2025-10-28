@@ -52,14 +52,9 @@
                 <i class="fa fa-bars"></i>
             </button>
         </div>
-        <div id="mobileMenu" class="md:hidden bg-dark/95 absolute w-full top-full py-4 px-4 hidden">
-            <div class="flex flex-col space-y-4">
-                <a href="#swap" class="hover:text-primary transition-colors py-2 text-white">交易</a>
-            </div>
-        </div>
     </header>
 
-    <section id="swap" class="min-h-screen pt-24 pb-16 bg-grid relative overflow-hidden flex items-center justify-center">
+    <section class="min-h-screen pt-24 pb-16 bg-grid relative overflow-hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-gradient-to-b from-primary/10 to-dark pointer-events-none"></div>
         <div class="absolute top-0 left-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
         <div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
@@ -72,38 +67,62 @@
                 用 WGDOG 买卖任意代币（支持自定义 Pair）
             </p>
 
-            <div class="bg-dark/50 backdrop-blur-sm p-6 rounded-xl border border-primary/30 max-w-md mx-auto">
-                <div class="flex flex-col space-y-4">
-                    <div class="flex justify-center gap-4">
-                        <button id="buyModeButton" class="px-6 py-2 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">买</button>
-                        <button id="sellModeButton" class="px-6 py-2 bg-dark/80 border border-secondary text-secondary rounded-full font-medium hover:bg-secondary/10 transition-all">卖</button>
+            <!-- 连接钱包 + Pair 输入 -->
+            <div class="max-w-md mx-auto mb-8">
+                <button id="connectWalletButton" class="w-full px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">连接钱包</button>
+                <p id="networkStatus" class="text-light-gray text-sm mt-2">点击连接钱包...</p>
+
+                <div class="flex items-center bg-dark/80 p-3 rounded-lg border border-primary/20 mt-4">
+                    <i class="fa fa-cubes text-accent mr-3"></i>
+                    <input id="pairInput" type="text" placeholder="输入 WGDOG↔代币 的 Pair 地址" class="bg-transparent text-white text-sm flex-1 outline-none">
+                </div>
+                <p id="pairStatus" class="text-xs mt-2 hidden"></p>
+            </div>
+
+            <!-- 双面板：买 + 卖 -->
+            <div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <!-- 买：WGDOG → Token -->
+                <div class="bg-dark/50 backdrop-blur-sm p-6 rounded-xl border border-primary/30">
+                    <h2 class="text-2xl font-display text-primary mb-4 text-center">买 Token</h2>
+                    <p class="text-light-gray text-sm mb-4 text-center">WGDOG → 代币</p>
+
+                    <p id="buyBalance" class="text-light-gray text-sm mb-4">WGDOG: 0 | 代币: 0</p>
+
+                    <div class="mb-4">
+                        <label class="block text-left text-light-gray mb-2">输入 WGDOG 数量</label>
+                        <input id="buyAmount" type="text" placeholder="输入数量" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
                     </div>
 
-                    <button id="connectWalletButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">连接钱包</button>
-                    <p id="networkStatus" class="text-light-gray text-sm">点击连接钱包...</p>
-
-                    <div class="flex items-center bg-dark/80 p-3 rounded-lg border border-primary/20">
-                        <i class="fa fa-cubes text-accent mr-3"></i>
-                        <input id="pairInput" type="text" placeholder="输入 WGDOG↔代币 的 Pair 地址" class="bg-transparent text-white text-sm flex-1 outline-none">
-                    </div>
-
-                    <p id="pairStatus" class="text-xs hidden"></p>
-                    <p id="balanceStatus" class="text-light-gray text-sm">WGDOG: 0 | 代币: 0</p>
-
-                    <button id="approveButton" class="px-6 py-3 bg-secondary text-dark rounded-full font-medium hover:bg-secondary/80 transition-all hidden">授权代币 (无限)</button>
-
-                    <div>
-                        <label id="amountLabel" class="block text-left text-light-gray mb-2">输入数量</label>
-                        <input id="amount" type="text" placeholder="输入数量" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
-                    </div>
-
-                    <div>
+                    <div class="mb-4">
                         <label class="block text-left text-light-gray mb-2">滑点容忍度 (%)</label>
-                        <input id="slippage" type="text" value="5" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                        <input id="buySlippage" type="text" value="5" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
                     </div>
 
-                    <button id="swapButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:opacity-50" disabled>开始交易</button>
-                    <p id="progressStatus" class="text-light-gray text-sm">等待操作...</p>
+                    <button id="buyApproveButton" class="w-full px-6 py-3 bg-secondary text-dark rounded-full font-medium hover:bg-secondary/80 transition-all hidden mb-2">授权 WGDOG (无限)</button>
+                    <button id="buyButton" class="w-full px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:opacity-50" disabled>买</button>
+                    <p id="buyStatus" class="text-light-gray text-sm mt-2">等待操作...</p>
+                </div>
+
+                <!-- 卖：Token → WGDOG -->
+                <div class="bg-dark/50 backdrop-blur-sm p-6 rounded-xl border border-primary/30">
+                    <h2 class="text-2xl font-display text-secondary mb-4 text-center">卖 Token</h2>
+                    <p class="text-light-gray text-sm mb-4 text-center">代币 → WGDOG</p>
+
+                    <p id="sellBalance" class="text-light-gray text-sm mb-4">代币: 0 | WGDOG: 0</p>
+
+                    <div class="mb-4">
+                        <label class="block text-left text-light-gray mb-2">输入代币数量</label>
+                        <input id="sellAmount" type="text" placeholder="输入数量" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-left text-light-gray mb-2">滑点容忍度 (%)</label>
+                        <input id="sellSlippage" type="text" value="5" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                    </div>
+
+                    <button id="sellApproveButton" class="w-full px-6 py-3 bg-secondary text-dark rounded-full font-medium hover:bg-secondary/80 transition-all hidden mb-2">授权代币 (无限)</button>
+                    <button id="sellButton" class="w-full px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:opacity-50" disabled>卖</button>
+                    <p id="sellStatus" class="text-light-gray text-sm mt-2">等待操作...</p>
                 </div>
             </div>
         </div>
@@ -126,7 +145,7 @@
             {"constant":true,"inputs":[],"name":"token1","outputs":[{"name":"","type":"address"}],"type":"function"}
         ];
         const routerAbi = [
-            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","name":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"view","type":"function"}
         ];
         const erc20Abi = [
@@ -144,12 +163,11 @@
         };
 
         let web3, account, router, pairContract, wgdog, targetToken;
-        let isBuyMode = true;
         let pairAddress = '';
         let path = [];
 
         async function init() {
-            if (!window.ethereum) return setStatus('请安装 MetaMask');
+            if (!window.ethereum) return setGlobalStatus('请安装 MetaMask');
             web3 = new Web3(window.ethereum);
             try {
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -159,8 +177,8 @@
                 router = new web3.eth.Contract(routerAbi, ROUTER);
                 wgdog = new web3.eth.Contract(erc20Abi, WGDOG);
                 document.getElementById('networkStatus').innerText = '已连接 GateLayer';
-                setStatus('请输入 Pair 地址');
-            } catch (e) { setStatus('连接失败'); }
+                setGlobalStatus('请输入 Pair 地址');
+            } catch (e) { setGlobalStatus('连接失败'); }
         }
 
         async function switchNetwork(chain) {
@@ -211,13 +229,13 @@
                 }
 
                 setPairStatus(`路径: WGDOG to ${path[1].slice(0,6)}...`, 'success');
-                await updateBalances();
+                await updateAllBalances();
             } catch (e) {
                 setPairStatus('读取 Pair 失败', 'error');
             }
         }
 
-        async function updateBalances() {
+        async function updateAllBalances() {
             if (!account || !targetToken) return;
             try {
                 const [wgdBal, tgtBal] = await Promise.all([
@@ -226,63 +244,109 @@
                 ]);
                 const wgd = parseFloat(web3.utils.fromWei(wgdBal, 'ether')).toFixed(6);
                 const tgt = parseFloat(web3.utils.fromWei(tgtBal, 'ether')).toFixed(6);
-                document.getElementById('balanceStatus').innerText = `WGDOG: ${wgd} | 代币: ${tgt}`;
-                checkAllowance();
-            } catch (e) { setStatus('余额查询失败'); }
+                document.getElementById('buyBalance').innerText = `WGDOG: ${wgd} | 代币: ${tgt}`;
+                document.getElementById('sellBalance').innerText = `代币: ${tgt} | WGDOG: ${wgd}`;
+                checkBuyAllowance();
+                checkSellAllowance();
+            } catch (e) { setGlobalStatus('余额查询失败'); }
         }
 
-        async function checkAllowance() {
-            if (!account || !targetToken) return disableSwap();
-            const amount = document.getElementById('amount').value.trim();
-            if (!amount || isNaN(amount) || amount <= 0) return disableSwap();
-
-            const token = isBuyMode ? wgdog : targetToken;
-            const allowance = await token.methods.allowance(account, ROUTER).call();
+        async function checkBuyAllowance() {
+            if (!account || !wgdog) return;
+            const amount = document.getElementById('buyAmount').value.trim();
+            if (!amount || isNaN(amount) || amount <= 0) return disableBuy();
+            const allowance = await wgdog.methods.allowance(account, ROUTER).call();
             const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2));
-            document.getElementById('approveButton').classList.toggle('hidden', !needsApprove);
-            document.getElementById('swapButton').disabled = needsApprove;
-            document.getElementById('swapButton').innerText = needsApprove ? '请先授权' : (isBuyMode ? '买' : '卖');
-            document.getElementById('amountLabel').innerText = isBuyMode ? '输入 WGDOG 数量' : '输入代币数量';
+            document.getElementById('buyApproveButton').classList.toggle('hidden', !needsApprove);
+            document.getElementById('buyButton').disabled = needsApprove;
+            document.getElementById('buyButton').innerText = needsApprove ? '请先授权' : '买';
         }
 
-        async function approve() {
-            const token = isBuyMode ? wgdog : targetToken;
-            document.getElementById('approveButton').innerHTML = '授权中...';
+        async function checkSellAllowance() {
+            if (!account || !targetToken) return;
+            const amount = document.getElementById('sellAmount').value.trim();
+            if (!amount || isNaN(amount) || amount <= 0) return disableSell();
+            const allowance = await targetToken.methods.allowance(account, ROUTER).call();
+            const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2));
+            document.getElementById('sellApproveButton').classList.toggle('hidden', !needsApprove);
+            document.getElementById('sellButton').disabled = needsApprove;
+            document.getElementById('sellButton').innerText = needsApprove ? '请先授权' : '卖';
+        }
+
+        async function approveBuy() {
+            document.getElementById('buyApproveButton').innerHTML = '授权中...';
             try {
-                await token.methods.approve(ROUTER, MAX_UINT).send({ from: account });
-                setStatus('授权成功！');
-                checkAllowance();
+                await wgdog.methods.approve(ROUTER, MAX_UINT).send({ from: account });
+                setBuyStatus('授权成功！');
+                checkBuyAllowance();
             } catch (e) {
-                setStatus(e.code === 4001 ? '已取消' : '授权失败');
+                setBuyStatus(e.code === 4001 ? '已取消' : '授权失败');
             } finally {
-                document.getElementById('approveButton').innerHTML = '授权代币 (无限)';
+                document.getElementById('buyApproveButton').innerHTML = '授权 WGDOG (无限)';
             }
         }
 
-        async function swap() {
-            const amount = document.getElementById('amount').value.trim();
-            const slippage = parseFloat(document.getElementById('slippage').value) || 5;
-            if (!amount || amount <= 0) return setStatus('请输入数量');
-            if (path.length !== 2) return setStatus('请先输入有效 Pair');
+        async function approveSell() {
+            document.getElementById('sellApproveButton').innerHTML = '授权中...';
+            try {
+                await targetToken.methods.approve(ROUTER, MAX_UINT).send({ from: account });
+                setSellStatus('授权成功！');
+                checkSellAllowance();
+            } catch (e) {
+                setSellStatus(e.code === 4001 ? '已取消' : '授权失败');
+            } finally {
+                document.getElementById('sellApproveButton').innerHTML = '授权代币 (无限)';
+            }
+        }
+
+        async function buy() {
+            const amount = document.getElementById('buyAmount').value.trim();
+            const slippage = parseFloat(document.getElementById('buySlippage').value) || 5;
+            if (!amount || amount <= 0) return setBuyStatus('请输入数量');
+            if (path.length !== 2) return setBuyStatus('请先输入有效 Pair');
 
             const amountIn = web3.utils.toWei(amount, 'ether');
-            const currentPath = isBuyMode ? path : [path[1], path[0]];
-
             try {
-                const amounts = await router.methods.getAmountsOut(amountIn, currentPath).call();
+                const amounts = await router.methods.getAmountsOut(amountIn, path).call();
                 const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
 
-                document.getElementById('swapButton').innerHTML = '交易中...';
+                document.getElementById('buyButton').innerHTML = '交易中...';
                 await router.methods.swapExactTokensForTokens(
-                    amountIn, amountOutMin, currentPath, account, Math.floor(Date.now()/1000)+1200
+                    amountIn, amountOutMin, path, account, Math.floor(Date.now()/1000)+1200
                 ).send({ from: account });
 
-                setStatus('交易成功！');
-                updateBalances();
+                setBuyStatus('交易成功！');
+                updateAllBalances();
             } catch (e) {
-                setStatus(e.code === 4001 ? '已取消' : '交易失败：' + (e.message || ''));
+                setBuyStatus(e.code === 4001 ? '已取消' : '交易失败：' + (e.message || ''));
             } finally {
-                document.getElementById('swapButton').innerHTML = isBuyMode ? '买' : '卖';
+                document.getElementById('buyButton').innerHTML = '买';
+            }
+        }
+
+        async function sell() {
+            const amount = document.getElementById('sellAmount').value.trim();
+            const slippage = parseFloat(document.getElementById('sellSlippage').value) || 5;
+            if (!amount || amount <= 0) return setSellStatus('请输入数量');
+            if (path.length !== 2) return setSellStatus('请先输入有效 Pair');
+
+            const amountIn = web3.utils.toWei(amount, 'ether');
+            const sellPath = [path[1], path[0]];
+            try {
+                const amounts = await router.methods.getAmountsOut(amountIn, sellPath).call();
+                const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
+
+                document.getElementById('sellButton').innerHTML = '交易中...';
+                await router.methods.swapExactTokensForTokens(
+                    amountIn, amountOutMin, sellPath, account, Math.floor(Date.now()/1000)+1200
+                ).send({ from: account });
+
+                setSellStatus('交易成功！');
+                updateAllBalances();
+            } catch (e) {
+                setSellStatus(e.code === 4001 ? '已取消' : '交易失败：' + (e.message || ''));
+            } finally {
+                document.getElementById('sellButton').innerHTML = '卖';
             }
         }
 
@@ -293,40 +357,24 @@
             el.classList.remove('hidden');
         }
 
-        function disableSwap() {
-            document.getElementById('swapButton').disabled = true;
-            document.getElementById('approveButton').classList.add('hidden');
-        }
+        function setGlobalStatus(msg) { /* 可选 */ }
+        function setBuyStatus(msg) { document.getElementById('buyStatus').innerText = msg; }
+        function setSellStatus(msg) { document.getElementById('sellStatus').innerText = msg; }
 
-        function setStatus(msg) { document.getElementById('progressStatus').innerText = msg; }
+        function disableBuy() { document.getElementById('buyButton').disabled = true; }
+        function disableSell() { document.getElementById('sellButton').disabled = true; }
 
-        function updateUI() {
-            const buyBtn = document.getElementById('buyModeButton');
-            const sellBtn = document.getElementById('sellModeButton');
-            [buyBtn, sellBtn].forEach(b => b.classList.remove('bg-primary', 'text-white', 'bg-dark/80', 'border', 'border-secondary', 'text-secondary'));
-            if (isBuyMode) {
-                buyBtn.classList.add('bg-primary', 'text-white');
-                sellBtn.classList.add('bg-dark/80', 'border', 'border-secondary', 'text-secondary');
-                path = [WGDOG, path[1]];
-            } else {
-                sellBtn.classList.add('bg-primary', 'text-white');
-                buyBtn.classList.add('bg-dark/80', 'border', 'border-secondary', 'text-secondary');
-                path = [path[1], WGDOG];
-            }
-            checkAllowance();
-        }
-
+        // 事件绑定
         document.getElementById('connectWalletButton').onclick = init;
         document.getElementById('pairInput').oninput = updatePair;
-        document.getElementById('amount').oninput = checkAllowance;
-        document.getElementById('slippage').oninput = checkAllowance;
-        document.getElementById('approveButton').onclick = approve;
-        document.getElementById('swapButton').onclick = swap;
-
-        document.getElementById('buyModeButton').onclick = () => { isBuyMode = true; updateUI(); };
-        document.getElementById('sellModeButton').onclick = () => { isBuyMode = false; updateUI(); };
-
-        document.getElementById('menuToggle').onclick = () => document.getElementById('mobileMenu').classList.toggle('hidden');
+        document.getElementById('buyAmount').oninput = checkBuyAllowance;
+        document.getElementById('sellAmount').oninput = checkSellAllowance;
+        document.getElementById('buySlippage').oninput = checkBuyAllowance;
+        document.getElementById('sellSlippage').oninput = checkSellAllowance;
+        document.getElementById('buyApproveButton').onclick = approveBuy;
+        document.getElementById('sellApproveButton').onclick = approveSell;
+        document.getElementById('buyButton').onclick = buy;
+        document.getElementById('sellButton').onclick = sell;
     </script>
 </body>
 </html>

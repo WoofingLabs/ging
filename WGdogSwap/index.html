@@ -65,7 +65,7 @@
             </div>
             <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">GdogSwap</h1>
             <p class="text-xl md:text-2xl text-light-gray max-w-3xl mx-auto mb-10">
-                用 WGDOG 买卖任意代币（无税专用）
+                用 WGDOG 买卖任意代币（一键交易）
             </p>
 
             <div class="bg-dark/50 backdrop-blur-sm p-6 rounded-xl border border-primary/30 max-w-md mx-auto">
@@ -80,7 +80,7 @@
 
                     <div class="flex items-center bg-dark/80 p-3 rounded-lg border border-primary/20">
                         <i class="fa fa-cubes text-accent mr-3"></i>
-                        <input id="pairInput" type="text" placeholder="输入 Pair 地址" class="bg-transparent text-white text-sm flex-1 outline-none">
+                        <input id="pairInput" type="text" placeholder="输入 Pair 地址 (WGDOG↔代币)" class="bg-transparent text-white text-sm flex-1 outline-none">
                     </div>
 
                     <p id="pairStatus" class="text-xs hidden"></p>
@@ -150,8 +150,9 @@
         }
 
         async function switchNetwork() {
-            try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2718' }] }); }
-            catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x2718', chainName: 'Gate Layer', rpcUrls: ['https://gatelayer-rpc.gatenode.cc'], nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 } }] }); }
+            const chainId = '0x2718'; // GateLayer
+            try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); }
+            catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId, chainName: 'Gate Layer', rpcUrls: ['https://gatelayer-rpc.gatenode.cc'], nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 } }] }); }
         }
 
         async function updatePair() {
@@ -168,7 +169,7 @@
                 if (t0 === w) { path = [WGDOG, token1]; targetToken = new web3.eth.Contract(erc20Abi, token1); }
                 else if (t1 === w) { path = [WGDOG, token0]; targetToken = new web3.eth.Contract(erc20Abi, token0); }
                 else return setPairStatus('Pair 中无 WGDOG', 'error');
-                setPairStatus(`路径: WGDOG to ${path[1].slice(0,6)}...`, 'success');
+                setPairStatus(`路径: WGDOG → ${path[1].slice(0,6)}...`, 'success');
                 await updateBalances();
             } catch (e) { setPairStatus('读取 Pair 失败', 'error'); }
         }
@@ -193,7 +194,7 @@
             btn.disabled = false;
             const token = isBuyMode ? wgdog : targetToken;
             const allowance = await token.methods.allowance(account, ROUTER).call();
-            const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(web3.utils.toWei(amount, 'ether')));
+            const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2)); // 只要不是无限授权
             btn.innerText = needsApprove ? '授权并交易' : (isBuyMode ? '买' : '卖');
         }
 
@@ -205,7 +206,7 @@
             const amountIn = web3.utils.toWei(amount, 'ether');
             const token = isBuyMode ? wgdog : targetToken;
             const allowance = await token.methods.allowance(account, ROUTER).call();
-            const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(amountIn));
+            const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2));
 
             const btn = document.getElementById('actionButton');
             btn.disabled = true;
@@ -217,7 +218,8 @@
                     setStatus('授权成功，继续交易...');
                 }
 
-                const amounts = await router.methods.getAmountsOut(amountIn, path).call();
+                // 关键修复：getAmountsOut 正确传参
+                const amounts = await router.methods.getAmountsOut(path[0], path[1], amountIn).call();
                 const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
 
                 await router.methods.swapExactTokensForTokens(

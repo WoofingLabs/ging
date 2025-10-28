@@ -14,12 +14,16 @@
                     colors: {
                         primary: '#ff9100',
                         secondary: '#ff6f61',
+                        accent: '#FFD700',
                         dark: '#1a1a2e',
                         'light-gray': '#E5E7EB',
                         error: '#ef4444',
                         success: '#10b981'
                     },
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], display: ['Changa One', 'system-ui', 'sans-serif'] },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Changa One', 'system-ui', 'sans-serif']
+                    },
                     animation: { 'float': 'float 3s ease-in-out infinite' },
                     keyframes: { float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } } }
                 }
@@ -65,7 +69,7 @@
             </div>
             <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">GdogSwap</h1>
             <p class="text-xl md:text-2xl text-light-gray max-w-3xl mx-auto mb-10">
-                用 WGDOG 买卖任意代币（一键交易）
+                用 WGDOG 买卖任意代币（支持自定义 Pair）
             </p>
 
             <div class="bg-dark/50 backdrop-blur-sm p-6 rounded-xl border border-primary/30 max-w-md mx-auto">
@@ -80,24 +84,26 @@
 
                     <div class="flex items-center bg-dark/80 p-3 rounded-lg border border-primary/20">
                         <i class="fa fa-cubes text-accent mr-3"></i>
-                        <input id="pairInput" type="text" placeholder="输入 Pair 地址 (WGDOG↔代币)" class="bg-transparent text-white text-sm flex-1 outline-none">
+                        <input id="pairInput" type="text" placeholder="输入 WGDOG↔代币 的 Pair 地址" class="bg-transparent text-white text-sm flex-1 outline-none">
                     </div>
 
                     <p id="pairStatus" class="text-xs hidden"></p>
                     <p id="balanceStatus" class="text-light-gray text-sm">WGDOG: 0 | 代币: 0</p>
 
+                    <button id="approveButton" class="px-6 py-3 bg-secondary text-dark rounded-full font-medium hover:bg-secondary/80 transition-all hidden">授权代币 (无限)</button>
+
                     <div>
-                        <label class="block text-left text-light-gray mb-2">数量</label>
+                        <label id="amountLabel" class="block text-left text-light-gray mb-2">输入数量</label>
                         <input id="amount" type="text" placeholder="输入数量" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
                     </div>
 
                     <div>
-                        <label class="block text-left text-light-gray mb-2">滑点 (%)</label>
-                        <input id="slippage" type="text" value="1" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                        <label class="block text-left text-light-gray mb-2">滑点容忍度 (%)</label>
+                        <input id="slippage" type="text" value="3" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
                     </div>
 
-                    <button id="actionButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">等待输入</button>
-                    <p id="progressStatus" class="text-light-gray text-sm">请输入 Pair 地址</p>
+                    <button id="swapButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:opacity-50" disabled>开始交易</button>
+                    <p id="progressStatus" class="text-light-gray text-sm">等待操作...</p>
                 </div>
             </div>
         </div>
@@ -117,10 +123,11 @@
 
         const pairAbi = [
             {"constant":true,"inputs":[],"name":"token0","outputs":[{"name":"","type":"address"}],"type":"function"},
-            {"constant":true,"inputs":[],"name":"token1","outputs":[{"name":"","type":"address"}],"type":"function"}
+            {"constant":true,"inputs":[],"name":"token1","outputs":[{"name":"","type":"address"}],"type":"function"},
+            {"constant":true,"inputs":[],"name":"getReserves","outputs":[{"name":"_reserve0","type":"uint112"},{"name":"_reserve1","type":"uint112"},{"name":"_blockTimestampLast","type":"uint32"}],"type":"function"}
         ];
         const routerAbi = [
-            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokensSupportingFeeOnTransferTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint256","name":"amountA","type":"uint256"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"}
         ];
         const erc20Abi = [
@@ -164,80 +171,114 @@
 
         async function checkPairTokens() {
             try {
-                const [token0, token1] = await Promise.all([pairContract.methods.token0().call(), pairContract.methods.token1().call()]);
-                const t0 = token0.toLowerCase(), t1 = token1.toLowerCase(), w = WGDOG.toLowerCase();
-                if (t0 === w) { path = [WGDOG, token1]; targetToken = new web3.eth.Contract(erc20Abi, token1); }
-                else if (t1 === w) { path = [WGDOG, token0]; targetToken = new web3.eth.Contract(erc20Abi, token0); }
-                else return setPairStatus('Pair 中无 WGDOG', 'error');
-                setPairStatus(`路径: WGDOG → ${path[1].slice(0,6)}...`, 'success');
+                const [token0, token1] = await Promise.all([
+                    pairContract.methods.token0().call(),
+                    pairContract.methods.token1().call()
+                ]);
+                const t0 = token0.toLowerCase();
+                const t1 = token1.toLowerCase();
+                const w = WGDOG.toLowerCase();
+
+                if (t0 === w) {
+                    path = [WGDOG, token1];
+                    targetToken = new web3.eth.Contract(erc20Abi, token1);
+                } else if (t1 === w) {
+                    path = [WGDOG, token0];
+                    targetToken = new web3.eth.Contract(erc20Abi, token0);
+                } else {
+                    return setPairStatus('Pair 中无 WGDOG', 'error');
+                }
+
+                setPairStatus(`路径: WGDOG to ${path[1].slice(0,6)}...`, 'success');
                 await updateBalances();
-            } catch (e) { setPairStatus('读取 Pair 失败', 'error'); }
+            } catch (e) {
+                setPairStatus('读取 Pair 失败', 'error');
+            }
         }
 
         async function updateBalances() {
             if (!account || !targetToken) return;
             try {
-                const [wgdBal, tgtBal] = await Promise.all([wgdog.methods.balanceOf(account).call(), targetToken.methods.balanceOf(account).call()]);
-                document.getElementById('balanceStatus').innerText = `WGDOG: ${parseFloat(web3.utils.fromWei(wgdBal, 'ether')).toFixed(6)} | 代币: ${parseFloat(web3.utils.fromWei(tgtBal, 'ether')).toFixed(6)}`;
-                updateActionButton();
+                const [wgdBal, tgtBal] = await Promise.all([
+                    wgdog.methods.balanceOf(account).call(),
+                    targetToken.methods.balanceOf(account).call()
+                ]);
+                const wgd = parseFloat(web3.utils.fromWei(wgdBal, 'ether')).toFixed(6);
+                const tgt = parseFloat(web3.utils.fromWei(tgtBal, 'ether')).toFixed(6);
+                document.getElementById('balanceStatus').innerText = `WGDOG: ${wgd} | 代币: ${tgt}`;
+                checkAllowance();
             } catch (e) { setStatus('余额查询失败'); }
         }
 
-        async function updateActionButton() {
+        async function checkAllowance() {
+            if (!account || !targetToken) return disableSwap();
             const amount = document.getElementById('amount').value.trim();
-            const btn = document.getElementById('actionButton');
-            if (!amount || isNaN(amount) || amount <= 0 || path.length !== 2) {
-                btn.disabled = true;
-                btn.innerText = '输入数量';
-                return;
-            }
-            btn.disabled = false;
+            if (!amount || isNaN(amount) || amount <= 0) return disableSwap();
+
             const token = isBuyMode ? wgdog : targetToken;
             const allowance = await token.methods.allowance(account, ROUTER).call();
             const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2));
-            btn.innerText = needsApprove ? '授权并交易' : (isBuyMode ? '买' : '卖');
+            document.getElementById('approveButton').classList.toggle('hidden', !needsApprove);
+            document.getElementById('swapButton').disabled = needsApprove;
         }
 
-        async function executeAction() {
+        async function approve() {
+            const token = isBuyMode ? wgdog : targetToken;
+            document.getElementById('approveButton').innerHTML = '授权中...';
+            try {
+                await token.methods.approve(ROUTER, MAX_UINT).send({ from: account });
+                setStatus('授权成功（无限授权）');
+                checkAllowance();
+            } catch (e) {
+                setStatus(e.code === 4001 ? '已取消' : '授权失败');
+            } finally {
+                document.getElementById('approveButton').innerHTML = '授权代币 (无限)';
+            }
+        }
+
+        async function swap() {
             const amount = document.getElementById('amount').value.trim();
-            const slippage = parseFloat(document.getElementById('slippage').value) || 1;
-            if (!amount || amount <= 0) return setStatus('请输入数量');
+            const slippage = parseFloat(document.getElementById('slippage').value) || 3;
+            if (!amount || isNaN(amount) || amount <= 0) return setStatus('请输入数量');
+            if (path.length !== 2) return setStatus('请先输入有效 Pair');
 
             const amountIn = web3.utils.toWei(amount, 'ether');
-            const token = isBuyMode ? wgdog : targetToken;
-            const allowance = await token.methods.allowance(account, ROUTER).call();
-            const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2));
-
-            const btn = document.getElementById('actionButton');
-            btn.disabled = true;
-            btn.innerHTML = needsApprove ? '授权中...' : '交易中...';
+            const tokenIn = isBuyMode ? path[0] : path[1];
+            const tokenOut = isBuyMode ? path[1] : path[0];
 
             try {
-                if (needsApprove) {
-                    await token.methods.approve(ROUTER, MAX_UINT).send({ from: account });
-                    setStatus('授权成功，继续交易...');
-                }
-
-                // 关键修复：正确调用 getAmountsOut
-                const amounts = await router.methods.getAmountsOut(path[0], path[1], amountIn).call();
+                // 修复：正确调用 getAmountsOut(tokenA, tokenB, amountA)
+                const amounts = await router.methods.getAmountsOut(tokenIn, tokenOut, amountIn).call();
                 const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
 
-                await router.methods.swapExactTokensForTokens(
+                document.getElementById('swapButton').innerHTML = '交易中...';
+                await router.methods.swapExactTokensForTokensSupportingFeeOnTransferTokens(
                     amountIn, amountOutMin, path, account, Math.floor(Date.now()/1000)+1200
                 ).send({ from: account });
 
                 setStatus('交易成功！');
                 updateBalances();
             } catch (e) {
-                setStatus(e.code === 4001 ? '已取消' : '交易失败：' + (e.message || ''));
+                const msg = e.message || '';
+                if (e.code === 4001) setStatus('交易已取消');
+                else if (msg.includes('INSUFFICIENT_OUTPUT_AMOUNT')) setStatus('滑点太高，建议增加滑点');
+                else if (msg.includes('TRANSFER_FROM_FAILED')) setStatus('余额不足或未授权');
+                else setStatus('交易失败：' + msg);
             } finally {
-                updateActionButton();
+                document.getElementById('swapButton').innerHTML = isBuyMode ? '买' : '卖';
             }
         }
 
         function setPairStatus(msg, color) {
             const el = document.getElementById('pairStatus');
-            el.innerText = msg; el.className = `text-xs ${color}`; el.classList.remove('hidden');
+            el.innerText = msg;
+            el.className = `text-xs ${color}`;
+            el.classList.remove('hidden');
+        }
+
+        function disableSwap() {
+            document.getElementById('swapButton').disabled = true;
+            document.getElementById('approveButton').classList.add('hidden');
         }
 
         function setStatus(msg) { document.getElementById('progressStatus').innerText = msg; }
@@ -250,19 +291,23 @@
                 buyBtn.classList.add('bg-primary', 'text-white');
                 sellBtn.classList.add('bg-dark/80', 'border', 'border-secondary', 'text-secondary');
                 path = [WGDOG, path[1]];
+                document.getElementById('amount').placeholder = '输入 WGDOG 数量';
             } else {
                 sellBtn.classList.add('bg-primary', 'text-white');
                 buyBtn.classList.add('bg-dark/80', 'border', 'border-secondary', 'text-secondary');
                 path = [path[1], WGDOG];
+                document.getElementById('amount').placeholder = '输入代币数量';
             }
-            updateActionButton();
+            document.getElementById('swapButton').innerText = isBuyMode ? '买' : '卖';
+            checkAllowance();
         }
 
         document.getElementById('connectWalletButton').onclick = init;
         document.getElementById('pairInput').oninput = updatePair;
-        document.getElementById('amount').oninput = updateActionButton;
-        document.getElementById('slippage').oninput = updateActionButton;
-        document.getElementById('actionButton').onclick = executeAction;
+        document.getElementById('amount').oninput = checkAllowance;
+        document.getElementById('slippage').oninput = checkAllowance;
+        document.getElementById('approveButton').onclick = approve;
+        document.getElementById('swapButton').onclick = swap;
 
         document.getElementById('buyModeButton').onclick = () => { isBuyMode = true; updateUI(); };
         document.getElementById('sellModeButton').onclick = () => { isBuyMode = false; updateUI(); };

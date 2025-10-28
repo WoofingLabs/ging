@@ -123,8 +123,7 @@
 
         const pairAbi = [
             {"constant":true,"inputs":[],"name":"token0","outputs":[{"name":"","type":"address"}],"type":"function"},
-            {"constant":true,"inputs":[],"name":"token1","outputs":[{"name":"","type":"address"}],"type":"function"},
-            {"constant":true,"inputs":[],"name":"getReserves","outputs":[{"name":"_reserve0","type":"uint112"},{"name":"_reserve1","type":"uint112"},{"name":"_blockTimestampLast","type":"uint32"}],"type":"function"}
+            {"constant":true,"inputs":[],"name":"token1","outputs":[{"name":"","type":"address"}],"type":"function"}
         ];
         const routerAbi = [
             {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokensSupportingFeeOnTransferTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},
@@ -135,6 +134,16 @@
             {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"type":"function"},
             {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"type":"function"}
         ];
+
+        // 正确网络配置（你原来的）
+        const chains = {
+            GateLayer: {
+                chainId: 10088,
+                chainName: 'Gate Layer',
+                rpcUrls: ['https://gatelayer-rpc.gatenode.cc'],
+                nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 }
+            }
+        };
 
         let web3, account, router, pairContract, wgdog, targetToken;
         let isBuyMode = true;
@@ -148,7 +157,7 @@
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 account = (await web3.eth.getAccounts())[0];
                 document.getElementById('connectWalletButton').innerText = `已连接: ${account.slice(0,6)}...${account.slice(-4)}`;
-                await switchNetwork();
+                await switchNetwork('GateLayer');
                 router = new web3.eth.Contract(routerAbi, ROUTER);
                 wgdog = new web3.eth.Contract(erc20Abi, WGDOG);
                 document.getElementById('networkStatus').innerText = '已连接 GateLayer';
@@ -156,10 +165,16 @@
             } catch (e) { setStatus('连接失败'); }
         }
 
-        async function switchNetwork() {
-            const chainId = '0x2718';
-            try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); }
-            catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId, chainName: 'Gate Layer', rpcUrls: ['https://gatelayer-rpc.gatenode.cc'], nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 } }] }); }
+        async function switchNetwork(chain) {
+            const c = chains[chain];
+            const chainIdHex = `0x${c.chainId.toString(16)}`; // 10088 → 0x2718
+            try {
+                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainIdHex }] });
+            } catch (e) {
+                if (e.code === 4902) {
+                    await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [c] });
+                }
+            }
         }
 
         async function updatePair() {
@@ -192,7 +207,7 @@
                 setPairStatus(`路径: WGDOG to ${path[1].slice(0,6)}...`, 'success');
                 await updateBalances();
             } catch (e) {
-                setPairStatus('读取 Pair 失败：' + (e.message || ''), 'error');
+                setPairStatus('读取 Pair 失败', 'error');
             }
         }
 
@@ -227,10 +242,10 @@
             document.getElementById('approveButton').innerHTML = '授权中...';
             try {
                 await token.methods.approve(ROUTER, MAX_UINT).send({ from: account });
-                setStatus('授权成功（无限授权）');
+                setStatus('授权成功');
                 checkAllowance();
             } catch (e) {
-                setStatus(e.code === 4001 ? '已取消' : '授权失败：' + (e.message || ''));
+                setStatus(e.code === 4001 ? '已取消' : '授权失败');
             } finally {
                 document.getElementById('approveButton').innerHTML = '授权代币 (无限)';
             }
@@ -239,7 +254,7 @@
         async function swap() {
             const amount = document.getElementById('amount').value.trim();
             const slippage = parseFloat(document.getElementById('slippage').value) || 3;
-            if (!amount || isNaN(amount) || amount <= 0) return setStatus('请输入数量');
+            if (!amount || amount <= 0) return setStatus('请输入数量');
             if (path.length !== 2) return setStatus('请先输入有效 Pair');
 
             const amountIn = web3.utils.toWei(amount, 'ether');
@@ -247,7 +262,6 @@
             const tokenOut = isBuyMode ? path[1] : path[0];
 
             try {
-                // 关键修复：getAmountsOut(tokenA, tokenB, amountA)
                 const amounts = await router.methods.getAmountsOut(tokenIn, tokenOut, amountIn).call();
                 const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
 
@@ -259,11 +273,7 @@
                 setStatus('交易成功！');
                 updateBalances();
             } catch (e) {
-                const msg = e.message || '';
-                if (e.code === 4001) setStatus('交易已取消');
-                else if (msg.includes('INSUFFICIENT_OUTPUT_AMOUNT')) setStatus('滑点太高，建议增加滑点');
-                else if (msg.includes('TRANSFER_FROM_FAILED')) setStatus('余额不足或未授权');
-                else setStatus('交易失败：' + msg);
+                setStatus(e.code === 4001 ? '已取消' : '交易失败：' + (e.message || ''));
             } finally {
                 document.getElementById('swapButton').innerHTML = isBuyMode ? '买' : '卖';
             }
@@ -291,12 +301,10 @@
                 buyBtn.classList.add('bg-primary', 'text-white');
                 sellBtn.classList.add('bg-dark/80', 'border', 'border-secondary', 'text-secondary');
                 path = [WGDOG, path[1]];
-                document.getElementById('amount').placeholder = '输入 WGDOG 数量';
             } else {
                 sellBtn.classList.add('bg-primary', 'text-white');
                 buyBtn.classList.add('bg-dark/80', 'border', 'border-secondary', 'text-secondary');
                 path = [path[1], WGDOG];
-                document.getElementById('amount').placeholder = '输入代币数量';
             }
             document.getElementById('swapButton').innerText = isBuyMode ? '买' : '卖';
             checkAllowance();

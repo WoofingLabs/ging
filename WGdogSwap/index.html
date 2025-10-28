@@ -65,7 +65,7 @@
             </div>
             <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">GdogSwap</h1>
             <p class="text-xl md:text-2xl text-light-gray max-w-3xl mx-auto mb-10">
-                用 WGDOG 买卖任意代币（一键交易）
+                用 WGDOG 买卖任意代币（无税专用）
             </p>
 
             <div class="bg-dark/50 backdrop-blur-sm p-6 rounded-xl border border-primary/30 max-w-md mx-auto">
@@ -93,7 +93,7 @@
 
                     <div>
                         <label class="block text-left text-light-gray mb-2">滑点 (%)</label>
-                        <input id="slippage" type="text" value="3" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                        <input id="slippage" type="text" value="1" class="w-full px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
                     </div>
 
                     <button id="actionButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">等待输入</button>
@@ -120,7 +120,7 @@
             {"constant":true,"inputs":[],"name":"token1","outputs":[{"name":"","type":"address"}],"type":"function"}
         ];
         const routerAbi = [
-            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokensSupportingFeeOnTransferTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
             {"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint256","name":"amountA","type":"uint256"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"}
         ];
         const erc20Abi = [
@@ -199,7 +199,7 @@
 
         async function executeAction() {
             const amount = document.getElementById('amount').value.trim();
-            const slippage = parseFloat(document.getElementById('slippage').value) || 3;
+            const slippage = parseFloat(document.getElementById('slippage').value) || 1;
             if (!amount || amount <= 0) return setStatus('请输入数量');
 
             const amountIn = web3.utils.toWei(amount, 'ether');
@@ -220,7 +220,7 @@
                 const amounts = await router.methods.getAmountsOut(amountIn, path).call();
                 const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
 
-                await router.methods.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                await router.methods.swapExactTokensForTokens(
                     amountIn, amountOutMin, path, account, Math.floor(Date.now()/1000)+1200
                 ).send({ from: account });
 

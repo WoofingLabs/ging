@@ -64,8 +64,6 @@
         <div class="absolute top-0 left-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
         <div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
         <div class="container mx-auto px-4 text-center relative z-10">
-            <div class="w-48 h-48 mx itertools
-
             <div class="w-48 h-48 mx-auto mb-8 animate-float">
                 <img src="https://woofinglabs.github.io/GdogToTheMoon/images/gdog_logo.png" alt="Gdog Logo" class="w-full h-full object-cover rounded-full border-4 border-secondary/50 glow-border">
             </div>
@@ -117,7 +115,7 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
     <script>
         const ROUTER = '0x12814690F59a9CE8bA87dC8cF0692442bAa9C097';
         const WGDOG = '0x41260498c4798be317BAAD4403f6eC6c80411349';
@@ -129,22 +127,13 @@
         ];
         const routerAbi = [
             {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},
-            {"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint256","name":"amountA","type":"uint256"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"}
+            {"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"view","type":"function"}
         ];
         const erc20Abi = [
             {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"},
             {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"type":"function"},
             {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"type":"function"}
         ];
-
-        const chains = {
-            GateLayer: {
-                chainId: 10088,
-                chainName: 'Gate Layer',
-                rpcUrls: ['https://gatelayer-mainnet.gatenode.cc/'], // 你指定的 RPC
-                nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 }
-            }
-        };
 
         let web3, account, router, pairContract, wgdog, targetToken;
         let isBuyMode = true;
@@ -158,7 +147,7 @@
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 account = (await web3.eth.getAccounts())[0];
                 document.getElementById('connectWalletButton').innerText = `已连接: ${account.slice(0,6)}...${account.slice(-4)}`;
-                await switchNetwork('GateLayer');
+                await switchNetwork();
                 router = new web3.eth.Contract(routerAbi, ROUTER);
                 wgdog = new web3.eth.Contract(erc20Abi, WGDOG);
                 document.getElementById('networkStatus').innerText = '已连接 GateLayer';
@@ -166,16 +155,10 @@
             } catch (e) { setStatus('连接失败'); }
         }
 
-        async function switchNetwork(chain) {
-            const c = chains[chain];
-            const chainIdHex = `0x${c.chainId.toString(16)}`;
-            try {
-                await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainIdHex }] });
-            } catch (e) {
-                if (e.code === 4902) {
-                    await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [c] });
-                }
-            }
+        async function switchNetwork() {
+            const chainId = '0x2718'; // 10088
+            try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); }
+            catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId, chainName: 'Gate Layer', rpcUrls: ['https://gatelayer-mainnet.gatenode.cc/'], nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 } }] }); }
         }
 
         async function updatePair() {
@@ -236,6 +219,7 @@
             const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2));
             document.getElementById('approveButton').classList.toggle('hidden', !needsApprove);
             document.getElementById('swapButton').disabled = needsApprove;
+            document.getElementById('swapButton').innerText = needsApprove ? '请先授权' : (isBuyMode ? '买' : '卖');
         }
 
         async function approve() {
@@ -243,10 +227,10 @@
             document.getElementById('approveButton').innerHTML = '授权中...';
             try {
                 await token.methods.approve(ROUTER, MAX_UINT).send({ from: account });
-                setStatus('授权成功');
+                setStatus('授权成功！');
                 checkAllowance();
             } catch (e) {
-                setStatus(e.code === 4001 ? '已取消' : '授权失败');
+                setStatus(e.code === 4001 ? '已取消' : '授权失败：' + (e.message || ''));
             } finally {
                 document.getElementById('approveButton').innerHTML = '授权代币 (无限)';
             }
@@ -263,7 +247,8 @@
             const tokenOut = isBuyMode ? path[1] : path[0];
 
             try {
-                const amounts = await router.methods.getAmountsOut(tokenIn, tokenOut, amountIn).call();
+                // 正确调用：getAmountsOut(amountIn, path)
+                const amounts = await router.methods.getAmountsOut(amountIn, path).call();
                 const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
 
                 document.getElementById('swapButton').innerHTML = '交易中...';
@@ -307,7 +292,6 @@
                 buyBtn.classList.add('bg-dark/80', 'border', 'border-secondary', 'text-secondary');
                 path = [path[1], WGDOG];
             }
-            document.getElementById('swapButton').innerText = isBuyMode ? '买' : '卖';
             checkAllowance();
         }
 

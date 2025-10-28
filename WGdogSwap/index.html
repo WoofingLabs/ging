@@ -150,7 +150,7 @@
         }
 
         async function switchNetwork() {
-            const chainId = '0x2718'; // GateLayer
+            const chainId = '0x2718';
             try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); }
             catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId, chainName: 'Gate Layer', rpcUrls: ['https://gatelayer-rpc.gatenode.cc'], nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 } }] }); }
         }
@@ -194,7 +194,7 @@
             btn.disabled = false;
             const token = isBuyMode ? wgdog : targetToken;
             const allowance = await token.methods.allowance(account, ROUTER).call();
-            const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2)); // 只要不是无限授权
+            const needsApprove = web3.utils.toBN(allowance).lt(web3.utils.toBN(MAX_UINT).divn(2));
             btn.innerText = needsApprove ? '授权并交易' : (isBuyMode ? '买' : '卖');
         }
 
@@ -218,7 +218,7 @@
                     setStatus('授权成功，继续交易...');
                 }
 
-                // 关键修复：getAmountsOut 正确传参
+                // 关键修复：正确调用 getAmountsOut
                 const amounts = await router.methods.getAmountsOut(path[0], path[1], amountIn).call();
                 const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
 

@@ -135,6 +135,15 @@
             {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"type":"function"}
         ];
 
+        // 你原来的网络配置
+        const chains = { 
+            GateLayer: { 
+                chainId: 10088, 
+                chainName: 'Gate Layer', 
+                rpcUrl: 'https://gatelayer-mainnet.gatenode.cc/' 
+            } 
+        };
+
         let web3, account, router, pairContract, wgdog, targetToken;
         let isBuyMode = true;
         let pairAddress = '';
@@ -147,7 +156,7 @@
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 account = (await web3.eth.getAccounts())[0];
                 document.getElementById('connectWalletButton').innerText = `已连接: ${account.slice(0,6)}...${account.slice(-4)}`;
-                await switchNetwork();
+                await switchNetwork('GateLayer');
                 router = new web3.eth.Contract(routerAbi, ROUTER);
                 wgdog = new web3.eth.Contract(erc20Abi, WGDOG);
                 document.getElementById('networkStatus').innerText = '已连接 GateLayer';
@@ -155,10 +164,24 @@
             } catch (e) { setStatus('连接失败'); }
         }
 
-        async function switchNetwork() {
-            const chainId = '0x2718'; // 10088
-            try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId }] }); }
-            catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId, chainName: 'Gate Layer', rpcUrls: ['https://gatelayer-mainnet.gatenode.cc/'], nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 } }] }); }
+        async function switchNetwork(chain) {
+            const c = chains[chain];
+            try { 
+                await window.ethereum.request({ 
+                    method: 'wallet_switchEthereumChain', 
+                    params: [{ chainId: `0x${c.chainId.toString(16)}` }] 
+                }); 
+            } catch (e) { 
+                if (e.code === 4902) await window.ethereum.request({ 
+                    method: 'wallet_addEthereumChain', 
+                    params: [{
+                        chainId: `0x${c.chainId.toString(16)}`,
+                        chainName: c.chainName,
+                        rpcUrls: [c.rpcUrl],
+                        nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 }
+                    }] 
+                }); 
+            }
         }
 
         async function updatePair() {
@@ -230,7 +253,7 @@
                 setStatus('授权成功！');
                 checkAllowance();
             } catch (e) {
-                setStatus(e.code === 4001 ? '已取消' : '授权失败：' + (e.message || ''));
+                setStatus(e.code === 4001 ? '已取消' : '授权失败');
             } finally {
                 document.getElementById('approveButton').innerHTML = '授权代币 (无限)';
             }
@@ -243,17 +266,15 @@
             if (path.length !== 2) return setStatus('请先输入有效 Pair');
 
             const amountIn = web3.utils.toWei(amount, 'ether');
-            const tokenIn = isBuyMode ? path[0] : path[1];
-            const tokenOut = isBuyMode ? path[1] : path[0];
+            const currentPath = isBuyMode ? path : [path[1], path[0]];
 
             try {
-                // 正确调用：getAmountsOut(amountIn, path)
-                const amounts = await router.methods.getAmountsOut(amountIn, path).call();
+                const amounts = await router.methods.getAmountsOut(amountIn, currentPath).call();
                 const amountOutMin = web3.utils.toBN(amounts[1]).muln(100 - slippage).divn(100);
 
                 document.getElementById('swapButton').innerHTML = '交易中...';
                 await router.methods.swapExactTokensForTokens(
-                    amountIn, amountOutMin, path, account, Math.floor(Date.now()/1000)+1200
+                    amountIn, amountOutMin, currentPath, account, Math.floor(Date.now()/1000)+1200
                 ).send({ from: account });
 
                 setStatus('交易成功！');
@@ -296,7 +317,7 @@
         }
 
         document.getElementById('connectWalletButton').onclick = init;
-        document.getElementById('pairInput').oninput = updatePair;
+        document.getElementById('pairInput')._Part.oninput = updatePair;
         document.getElementById('amount').oninput = checkAllowance;
         document.getElementById('slippage').oninput = checkAllowance;
         document.getElementById('approveButton').onclick = approve;

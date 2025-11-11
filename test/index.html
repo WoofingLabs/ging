@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ging X402 0 gas转账</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/WoofingLabs/ging/refs/heads/main/ging.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0068FF',
+                        secondary: '#18E5A0',
+                        accent: '#FFD700',
+                        dark: '#070808',
+                        'light-gray': '#E5E7EB'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Changa One', 'system-ui', 'sans-serif']
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        .text-shadow-glow { text-shadow: 0 0 10px rgba(0, 104, 255, 0.5); }
+        .glow-border { box-shadow: 0 0 12px rgba(24, 229, 160, 0.3); }
+        .bg-grid { background-image: url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Ccircle cx="1" cy="1" r="1" fill="%230068FF" fill-opacity="0.1"/%3E%3C/svg%3E'); background-size: 20px 20px; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Changa+One&display=swap" rel="stylesheet">
+</head>
+<body class="bg-dark text-white font-sans overflow-x-hidden">
+<header class="fixed w-full z-50 bg-dark/90 backdrop-blur-md transition-all duration-300" id="navbar">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3 cursor-pointer hover:text-primary transition-colors">
+            <div class="w-10 h-10 rounded-full overflow-hidden">
+                <img src="https://raw.githubusercontent.com/WoofingLabs/ging/refs/heads/main/ging.png" alt="Ging Logo" class="w-full h-full object-cover">
+            </div>
+            <span class="font-display text-3xl text-primary text-shadow-glow">Ging 0 gas转账</span>
+        </div>
+        <button id="menuToggle" class="md:hidden text-2xl text-primary"><i class="fa fa-bars"></i></button>
+    </div>
+    <div id="mobileMenu" class="md:hidden bg-dark/95 absolute w-full top-full py-4 px-4 hidden">
+        <div class="flex flex-col space-y-4">
+            <a href="#transfer" class="hover:text-primary transition-colors py-2 text-white">转账</a>
+        </div>
+    </div>
+</header>
+
+<section id="transfer" class="min-h-screen pt-24 pb-16 bg-grid relative overflow-hidden flex items-center justify-center">
+    <div class="absolute inset-0 bg-gradient-to-b from-primary/10 to-dark pointer-events-none"></div>
+    <div class="absolute top-0 left-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
+    <div class="container mx-auto px-4 text-center relative z-10">
+        <div class="w-48 h-48 mx-auto mb-8 animate-float">
+            <img src="https://raw.githubusercontent.com/WoofingLabs/ging/refs/heads/main/ging.png" alt="Ging Logo" class="w-full h-full object-cover rounded-full border-4 border-secondary/50 glow-border">
+        </div>
+        <h1 class="font-display text-5xl md:text-7xl mb-6 text-primary text-shadow-glow">Ging 0 gas转账</h1>
+        <p class="text-xl md:text-2xl text-light-gray max-w-3xl mx-auto mb-10">
+            持有 ≥1000 GING，即可免 Gas 转账！输入金额并生成签名。
+        </p>
+        <div class="bg-dark/50 p-6 rounded-lg border border-primary/30 max-w-2xl mx-auto mb-8">
+            <div class="flex flex-col space-y-4">
+                <button id="connectWalletButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all">连接钱包</button>
+                <p id="networkStatus" class="text-light-gray text-sm">点击连接钱包...</p>
+                <div class="flex items-center bg-dark/80 p-3 rounded-lg border border-primary/20">
+                    <i class="fa fa-link text-accent mr-3"></i>
+                    <span class="font-mono text-sm text-white truncate">0x9B40eF0A63Fd88A6b44fc698D8539f93AE371904</span>
+                    <button class="ml-3 text-light-gray hover:text-secondary transition-colors" onclick="copyContractAddress()"><i class="fa fa-copy"></i></button>
+                </div>
+                <div class="bg-dark/80 p-3 rounded-lg border border-primary/20">
+                    <p id="balanceStatus" class="text-light-gray text-sm">GT余额: 0<br>Ging余额: 0<br>Nonce: 0</p>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <label class="block text-left text-light-gray mb-2">接收者地址</label>
+                    <input type="text" id="transferTo" placeholder="输入接收者地址 (0x...)" class="px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                    <label class="block text-left text-light-gray mb-2">转账金额 (Ging)</label>
+                    <input type="text" id="transferAmount" placeholder="输入金额 (如 100.123456789012345678)" class="px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                    <label class="block text-left text-light-gray mb-2">有效截止时间 (1小时后)</label>
+                    <input type="datetime-local" id="validBefore" class="px-4 py-2 bg-dark/80 border border-primary/20 rounded-lg text-white focus:outline-none focus:border-secondary">
+                    <button id="autoFillTimeButton" class="px-4 py-2 bg-accent text-dark rounded-full font-medium hover:bg-accent/80 transition-all">自动填充时间</button>
+                    <p id="transferStatus" class="text-light-gray text-sm">请输入转账信息</p>
+                    <button id="signTransferButton" class="px-6 py-3 bg-primary text-white rounded-full font-medium hover:bg-primary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed">生成签名</button>
+                    <button id="executeTransferButton" class="px-6 py-3 bg-secondary text-dark rounded-full font-medium hover:bg-secondary/80 transition-all disabled:bg-dark/50 disabled:cursor-not-allowed" disabled>执行转账</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="bg-dark/95 py-12 border-t border-primary/20">
+    <div class="container mx-auto px-4 text-center">
+        <p class="text-light-gray text-sm">© 2025 Ging 社区。保留所有权利。请自行研究并谨慎投资。</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+<script>
+    const X402_CONTRACT_ADDRESS = '0x9B40eF0A63Fd88A6b44fc698D8539f93AE371904';
+    const chains = { GateLayer: { chainId: 10088, chainName: 'Gate Layer', rpcUrl: 'https://gatelayer-mainnet.gatenode.cc', blockExplorer: 'https://www.gatescan.org/gatelayer/', nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 } } };
+    let web3, account, x402Contract;
+
+    const x402Abi = [
+        {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+        {"inputs":[{"internalType":"address","name":"ownerAddr","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"uint256","name":"validBefore","type":"uint256"},{"internalType":"bytes32","name":"nonce","type":"bytes32"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"executeMetaTransfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[],"name":"getContractBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+    ];
+
+    async function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function retry(fn, max = 3, delayMs = 3000) {
+        for (let i = 1; i <= max; i++) {
+            try { return await Promise.race([fn(), new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout')), 15000))]); }
+            catch (e) { if (i === max) throw e; await delay(delayMs); }
+        }
+    }
+
+    async function initializeWeb3() {
+        if (!window.ethereum) return document.getElementById('networkStatus').innerText = '请安装 MetaMask';
+        web3 = new Web3(window.ethereum);
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            account = accounts[0];
+            document.getElementById('connectWalletButton').innerText = `已连接: ${account.slice(0,6)}...${account.slice(-4)}`;
+            await switchNetwork('GateLayer');
+            x402Contract = new web3.eth.Contract(x402Abi, X402_CONTRACT_ADDRESS);
+            await updateBalances();
+            autoFillTime();
+            document.getElementById('networkStatus').innerText = '已连接 Gate Layer';
+        } catch (e) { document.getElementById('networkStatus').innerText = `连接失败: ${e.message}`; }
+    }
+
+    async function switchNetwork(chain) {
+        const c = chains[chain];
+        try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${c.chainId.toString(16)}` }] }); }
+        catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: `0x${c.chainId.toString(16)}`, chainName: c.chainName, rpcUrls: [c.rpcUrl], nativeCurrency: c.nativeCurrency, blockExplorerUrls: [c.blockExplorer] }] }); else throw e; }
+    }
+
+    async function updateBalances() {
+        if (!account) return;
+        try {
+            const gt = await retry(() => web3.eth.getBalance(account));
+            const ging = await retry(() => x402Contract.methods.balanceOf(account).call());
+            const nonce = await retry(() => x402Contract.methods.nonces(account).call());
+            document.getElementById('balanceStatus').innerHTML = `GT余额: ${Number(web3.utils.fromWei(gt, 'ether')).toFixed(4)}<br>Ging余额: ${Number(web3.utils.fromWei(ging, 'ether')).toFixed(4)}<br>Nonce: ${nonce}`;
+        } catch (e) { document.getElementById('networkStatus').innerText = `余额查询失败: ${e.message}`; }
+    }
+
+    function autoFillTime() {
+        const now = new Date();
+        const before = new Date(now.getTime() + 3600000);
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById('validBefore').value = `${before.getFullYear()}-${pad(before.getMonth()+1)}-${pad(before.getDate())}T${pad(before.getHours())}:${pad(before.getMinutes())}`;
+        document.getElementById('transferStatus').innerText = '已自动填充 1 小时后截止时间';
+    }
+
+    async function signTransfer() {
+        const to = document.getElementById('transferTo').value;
+        const amount = document.getElementById('transferAmount').value;
+        const beforeInput = document.getElementById('validBefore').value;
+        const status = document.getElementById('transferStatus');
+        const signBtn = document.getElementById('signTransferButton');
+        const execBtn = document.getElementById('executeTransferButton');
+
+        if (!web3.utils.isAddress(to)) return status.innerText = '无效接收地址';
+        if (!amount || isNaN(amount) || Number(amount) <= 0) return status.innerText = '无效金额';
+        const validBefore = Math.floor(new Date(beforeInput).getTime() / 1000);
+        if (validBefore <= Math.floor(Date.now()/1000)) return status.innerText = '截止时间必须晚于当前';
+
+        try {
+            signBtn.disabled = true; signBtn.innerHTML = '签名中...'; status.innerText = '生成签名中...';
+            const nonce = await x402Contract.methods.nonces(account).call();
+            const value = web3.utils.toWei(amount, 'ether');
+
+            const typedData = {
+                types: {
+                    EIP712Domain: [{name:'name',type:'string'},{name:'version',type:'string'},{name:'chainId',type:'uint256'},{name:'verifyingContract',type:'address'}],
+                    MetaTransfer: [{name:'from',type:'address'},{name:'to',type:'address'},{name:'value',type:'uint256'},{name:'validBefore',type:'uint256'},{name:'nonce',type:'bytes32'}]
+                },
+                domain: { name: 'Ging', version: '1', chainId: 10088, verifyingContract: X402_CONTRACT_ADDRESS },
+                primaryType: 'MetaTransfer',
+                message: { from: account, to, value, validBefore, nonce: web3.utils.padLeft(web3.utils.numberToHex(nonce), 64) }
+            };
+
+            const sig = await window.ethereum.request({ method: 'eth_signTypedData_v4', params: [account, JSON.stringify(typedData)] });
+            const r = '0x' + sig.slice(2, 66), s = '0x' + sig.slice(66, 130), v = parseInt(sig.slice(130, 132), 16);
+
+            status.innerText = '签名成功！可执行';
+            execBtn.disabled = false;
+            execBtn.dataset.sig = JSON.stringify({v,r,s,from:account,to,value,validBefore,nonce});
+        } catch (e) { status.innerText = `签名失败: ${e.message}`; }
+        finally { signBtn.disabled = false; signBtn.innerHTML = '生成签名'; }
+    }
+
+    async function executeTransfer() {
+        const status = document.getElementById('transferStatus');
+        const execBtn = document.getElementById('executeTransferButton');
+        let data; try { data = JSON.parse(execBtn.dataset.sig); } catch { return status.innerText = '签名无效'; }
+
+        const {v,r,s,from,to,value,validBefore,nonce} = data;
+        try {
+            execBtn.disabled = true; execBtn.innerHTML = '转账中...'; status.innerText = '提交交易...';
+            const tx = await x402Contract.methods.executeMetaTransfer(from, to, value, validBefore, web3.utils.padLeft(web3.utils.numberToHex(nonce), 64), v, r, s).send({ from: account });
+            status.innerText = `转账成功！Tx: ${tx.transactionHash.slice(0,10)}...`;
+            await updateBalances();
+        } catch (e) { status.innerText = `转账失败: ${e.message}`; }
+        finally { execBtn.disabled = true; execBtn.innerHTML = '执行转账'; }
+    }
+
+    function copyContractAddress() {
+        navigator.clipboard.writeText(X402_CONTRACT_ADDRESS).then(() => {
+            const n = document.createElement('div');
+            n.className = 'fixed bottom-4 right-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            n.textContent = '合约地址已复制！';
+            document.body.appendChild(n);
+            setTimeout(() => { n.style.opacity = '0'; n.style.transition = 'opacity 0.3s'; setTimeout(() => document.body.removeChild(n), 300); }, 2000);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('connectWalletButton').onclick = initializeWeb3;
+        document.getElementById('autoFillTimeButton').onclick = autoFillTime;
+        document.getElementById('signTransferButton').onclick = signTransfer;
+        document.getElementById('executeTransferButton').onclick = executeTransfer;
+        document.getElementById('menuToggle').onclick = () => {
+            const m = document.getElementById('mobileMenu');
+            m.classList.toggle('hidden');
+            document.getElementById('menuToggle').innerHTML = m.classList.contains('hidden') ? '<i class="fa fa-bars"></i>' : '<i class="fa fa-times"></i>';
+        };
+    });
+</script>
+</body>
+</html>
